@@ -1,0 +1,12 @@
+entries:
+  - id: pieces_of_eight
+    topic: glossary
+    summary: Spanish silver coins, the common currency of the trade routes.
+    details: A full chest of pieces of eight could fund a crew for a year.
+
+  - id: the_black_mark
+    topic: glossary
+    summary: A secret sign scratched on tavern doors to identify safe contacts.
+    details: |
+      Only trusted smugglers and pirates recognize the mark. It changes
+      location every season to avoid naval informants.

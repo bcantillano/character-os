@@ -30,7 +30,7 @@ The system should make interactions feel natural, imperfect, emotional, and auth
 
 ## Current Phase
 
-Phase 1 focuses entirely on the Character Brain.
+Phase 1 focuses on the Character Brain through text conversation.
 
 No robotics.
 
@@ -38,7 +38,11 @@ No computer vision.
 
 No movement.
 
-The goal is to create a believable character through conversation alone.
+No voice (TTS arrives in Phase 1b; speech recognition in Phase 3).
+
+The goal is to create a believable character through text conversation alone.
+
+Success means the user feels they met a character — not that they used an AI. See Phase 1 success criteria in `docs/ROADMAP.md` and the lifecycle in `docs/CHARACTER_LIFECYCLE.md`.
 
 ---
 
@@ -56,3 +60,15 @@ Future versions will support:
 - Educational companions
 
 The Character Brain should remain independent from any hardware platform.
+
+---
+
+## Content Model
+
+Characters and worlds are defined through YAML configuration and Markdown prompts — not application code.
+
+- `characters/<name>/` — character packs (`character.yaml` + assets)
+- `worlds/<name>/` — reusable world packs (shared lore and rules)
+- `prompts/` — editable LLM prompt templates
+
+See `docs/CONFIGURATION.md` for full schemas.

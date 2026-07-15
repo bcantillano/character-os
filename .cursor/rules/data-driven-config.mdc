@@ -1,0 +1,23 @@
+---
+description: Data-driven character and world configuration conventions
+alwaysApply: true
+---
+
+# Data-Driven Configuration
+
+Character OS content is configuration, not code.
+
+## Layout
+
+- `characters/<id>/character.yaml` — character identity, personality, goals
+- `characters/<id>/assets/` — portraits, audio refs, optional prompt overrides
+- `worlds/<id>/world.yaml` — shared world metadata and knowledge index
+- `worlds/<id>/knowledge/` — reusable lore (YAML entries)
+- `prompts/*.md` — LLM templates loaded at runtime
+
+## Rules
+
+- New characters = new folder + YAML. No application code changes.
+- World knowledge is shared via world packs; characters only add private `knowledge` entries.
+- Prompts are Markdown templates with `{{variables}}`. Business logic stays in Python.
+- Reference `docs/CONFIGURATION.md` for schemas and the loading contract.

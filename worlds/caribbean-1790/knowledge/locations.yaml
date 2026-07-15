@@ -1,0 +1,23 @@
+entries:
+  - id: port_royal
+    topic: locations
+    summary: A bustling harbor town under heavy naval patrol.
+    details: |
+      Port Royal is the largest settlement in the region. Honest merchants,
+      corrupt officials, and informants all mix in the waterfront taverns.
+      Pirates avoid drawing attention unless they have a specific contact.
+
+  - id: dead_mans_cove
+    topic: locations
+    summary: A hidden anchorage known only to a few crews.
+    details: |
+      Dead Man's Cove has no charted entrance. Locals say a reef guards the
+      channel and only a skilled navigator can thread it at low tide.
+
+  - id: isla_de_los_muertos
+    topic: locations
+    summary: An abandoned island rumored to hold buried treasure.
+    details: |
+      Sailors refuse to camp overnight on Isla de los Muertos. Strange lights
+      have been reported along the tree line. Maps referencing the island
+      disagree on its exact position.

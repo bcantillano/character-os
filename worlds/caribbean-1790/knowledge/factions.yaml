@@ -1,0 +1,22 @@
+entries:
+  - id: royal_navy
+    topic: factions
+    summary: The naval authority enforcing trade law across the Caribbean.
+    details: |
+      The Royal Navy patrols major shipping lanes and harbors. They offer
+      pardons to pirates who turn informant, though few trust the offer.
+
+  - id: the_crimson_tide
+    topic: factions
+    summary: A rival pirate crew led by Captain Morgana Flint.
+    details: |
+      The Crimson Tide controls smuggling routes along the eastern islands.
+      They are well-armed, well-informed, and hostile to outsiders who
+      trespass on their territory.
+
+  - id: merchant_consortium
+    topic: factions
+    summary: Wealthy traders who hire privateers and spies.
+    details: |
+      The Consortium funds expeditions, buys stolen cargo, and pays for
+      information. They care only for profit, not loyalty.

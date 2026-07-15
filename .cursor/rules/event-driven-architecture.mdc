@@ -1,0 +1,24 @@
+---
+description: Event-driven architecture conventions for Character OS
+alwaysApply: true
+---
+
+# Event-Driven Architecture
+
+Character OS communicates through an event bus. This applies from Phase 1 onward.
+
+## Rules
+
+- All modules publish and subscribe via `events/` — no direct cross-module calls
+- **decision/** produces intent (`IntentDecidedEvent`); **behavior/** executes action
+- **brain/scheduler.py** publishes `TimeTickEvent` for internal state evolution; Phase 1 CLI ticks must not speak unprompted
+- Characters follow Observe → Interpret → Reflect → Decide → Act → Remember (`docs/CHARACTER_LIFECYCLE.md`)
+- New input sources (CLI, vision, sensors, robotics) publish events; they do not bypass the pipeline
+- Phase 1 events: `UserMessageEvent`, `TimeTickEvent`, `InputInterpretedEvent`, `StateChangedEvent`, `IntentDecidedEvent`, `ResponseReadyEvent`
+
+## Future event types (same bus)
+
+- `VisionDetectedEvent`, `SpeechRecognizedEvent`, `SensorReadingEvent` (Phase 3)
+- `MotionCompletedEvent` (Phase 4)
+
+See `docs/PHASE_1_STRUCTURE.md` for folder layout and event flow.
