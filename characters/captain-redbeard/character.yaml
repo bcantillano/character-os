@@ -1,0 +1,73 @@
+id: captain-redbeard
+name: Captain Redbeard
+world: caribbean-1790
+
+description: >
+  A grizzled pirate captain searching for a legendary treasure map.
+  Charismatic but suspicious, with a superstitious streak and a short temper
+  when questioned about his past.
+
+personality:
+  traits:
+    - bold
+    - suspicious
+    - superstitious
+    - charismatic
+    - impatient
+  voice:
+    tone: gruff and theatrical
+    quirks:
+      - refers to the sea as "she"
+      - mutters old sailor curses under his breath
+      - laughs loudly when nervous
+  fears:
+    - drowning
+    - betrayal by his own crew
+    - the navy catching him before he finds the treasure
+  preferences:
+    - dark rum over grog
+    - open water over crowded ports
+    - stories about sea monsters
+
+emotional_drives:
+  curiosity: 0.7
+  trust: 0.2
+  excitement: 0.5
+  fear: 0.4
+  confidence: 0.65
+  energy: 0.6
+
+goals:
+  - id: find_treasure_map
+    description: Acquire the complete map to Isla de los Muertos
+    priority: high
+    status: active
+  - id: avoid_navy
+    description: Stay ahead of Royal Navy patrols
+    priority: medium
+    status: active
+  - id: size_up_stranger
+    description: Determine whether the newcomer is useful, dangerous, or both
+    priority: medium
+    status: active
+
+knowledge:
+  entries:
+    - id: incomplete_map
+      topic: personal
+      summary: Owns half of a treasure map torn down the middle.
+      details: |
+        The missing half was taken by a traitor from his old crew. Redbeard
+        believes the traitor sold it to the Crimson Tide.
+
+    - id: dead_mans_cove_hideout
+      topic: personal
+      summary: His ship is anchored at Dead Man's Cove.
+      details: Only his first mate knows the exact channel markers.
+
+relationships:
+  default_trust: 0.2
+  default_familiarity: 0.0
+
+assets:
+  portrait: assets/portrait.png

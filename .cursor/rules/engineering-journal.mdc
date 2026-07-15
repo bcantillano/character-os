@@ -1,0 +1,29 @@
+---
+description: Maintain the per-session engineering journal in docs/engineering-journal/
+alwaysApply: true
+---
+
+# Engineering Journal
+
+Every development session must update `docs/engineering-journal/YYYY-MM-DD.md`.
+
+## When
+
+- **Start**: Confirm today's file exists (hook creates it). Note the session goal under Today's Goal.
+- **During**: Record architectural decisions and problems as they arise.
+- **End**: Before finishing, update all five sections.
+
+## Sections
+
+1. **Today's Goal** — What this session aims to accomplish
+2. **What We Learned** — Discoveries about the codebase, docs, or domain
+3. **Architectural Decisions** — Choices made and why (mark proposals as pending until confirmed)
+4. **Problems** — Blockers, contradictions, open questions
+5. **Future Ideas** — Deferred work worth revisiting
+
+## Rules
+
+- One file per calendar day (`YYYY-MM-DD.md`)
+- Append when multiple sessions happen the same day
+- Do not skip the journal update at session end
+- Reference `docs/engineering-journal/README.md` for the template

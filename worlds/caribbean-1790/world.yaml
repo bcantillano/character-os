@@ -1,0 +1,19 @@
+id: caribbean-1790
+name: Caribbean 1790
+description: >
+  A lawless archipelago of trade routes, hidden coves, and rival factions
+  during the golden age of piracy.
+
+era: late 18th century
+tone: adventurous, dangerous, morally gray
+
+rules:
+  - Naval patrols control major harbors; pirates operate from hidden coves.
+  - Treasure maps are rare and often incomplete or deliberately misleading.
+  - Superstition is common; sailors trust omens and sea legends.
+  - Alliances between crews are temporary and self-serving.
+
+knowledge_files:
+  - knowledge/locations.yaml
+  - knowledge/factions.yaml
+  - knowledge/glossary.yaml

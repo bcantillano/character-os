@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "command": ".cursor/hooks/ensure-engineering-journal.sh"
+      }
+    ],
+    "stop": [
+      {
+        "command": ".cursor/hooks/prompt-journal-update.sh",
+        "loop_limit": 1
+      }
+    ]
+  }
+}

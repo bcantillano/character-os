@@ -2,16 +2,37 @@
 
 ## Phase 1
 
-Character Brain
+Character Brain (text)
 
 - personality
-- memory
+- long-term memory (persists across sessions)
+- conversation state (session-only)
 - knowledge
-- emotions
+- emotional drives (Curiosity, Trust, Excitement, Fear, Confidence, Energy)
 - goals
-- decision engine
-- text conversation
-- voice conversation
+- decision engine (intent)
+- behavior executor (action)
+- internal thoughts
+- text conversation (CLI)
+- event bus (central communication)
+- time-tick scheduler (internal state only — no unprompted CLI speech)
+- provider-agnostic LLM layer (OpenAI default)
+- data-driven character and world packs (YAML + Markdown prompts)
+- character lifecycle: Observe → Interpret → Reflect → Decide → Act → Remember
+
+### Phase 1 success criteria
+
+Not a chatbot. A successful demo shows consistent personality, persistent memory, emotional consistency, world awareness, goal-driven conversation, and natural curiosity. After ~10 minutes the user should describe meeting a character, not using an AI.
+
+---
+
+## Phase 1b
+
+Voice output
+
+- text-to-speech (TTS)
+- character voice profiles
+- no speech recognition (deferred to Phase 3)
 
 ---
 
