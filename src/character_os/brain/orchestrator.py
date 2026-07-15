@@ -129,6 +129,12 @@ class BrainOrchestrator:
             if not fact or fact.lower() in {"none", "none yet", "n/a"}:
                 continue
             content = fact if fact != raw_message else f"User said: {fact}"
+            existing = self.memory.find_similar(content)
+            if existing is not None:
+                existing.importance = min(1.0, existing.importance + 0.05)
+                if self.persistence is not None:
+                    self.persistence.memories.upsert(self.character.id, existing)
+                continue
             if self.persistence is not None:
                 stored = self.persistence.remember_fact(content, importance=0.6, tags=["interaction"])
                 self.memory.add(stored)
@@ -137,7 +143,9 @@ class BrainOrchestrator:
 
                 from character_os.brain.memory import MemoryFact
 
-                self.memory.add(MemoryFact(id=str(uuid4()), content=content, importance=0.6, tags=["interaction"]))
+                self.memory.add(
+                    MemoryFact(id=str(uuid4()), content=content, importance=0.6, tags=["interaction"])
+                )
 
     def _persist(self) -> None:
         if self.persistence is None:
@@ -150,7 +158,12 @@ class BrainOrchestrator:
         )
 
     def memory_context(self) -> str:
-        facts = self.memory.all()[:6]
+        facts = self.memory.all()[:8]
         if not facts:
             return "(no long-term memories yet)"
-        return "\n".join(f"- {f.content} (importance={f.importance:.2f})" for f in facts)
+        lines = [
+            "Facts you already know and should use when relevant:",
+        ]
+        for fact in facts:
+            lines.append(f"- {fact.content}")
+        return "\n".join(lines)

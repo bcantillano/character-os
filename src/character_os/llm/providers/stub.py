@@ -42,7 +42,7 @@ class StubProvider(LLMProvider):
                 "topics: stranger, introduction\n"
                 "emotional_tone: curious\n"
                 "relationship_signals: unfamiliar\n"
-                "notable_facts: none yet"
+                "notable_facts: none"
             )
 
         snippet = user.strip()[:80] if user else "silence"

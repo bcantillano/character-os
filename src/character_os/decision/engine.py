@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from character_os.core.types import CharacterState, Intent, IntentKind
+from character_os.core.types import CharacterState, Goal, Intent, IntentKind
 from character_os.events.bus import EventBus
 from character_os.events.types import IntentDecidedEvent, StateChangedEvent
 
@@ -32,12 +32,17 @@ class DecisionEngine:
                 source="tick",
             )
         else:
-            # User-driven reflection → speak by default in Phase 1 CLI.
-            goal = next((g.id for g in state.goals if g.status == "active"), None)
+            goal = _pick_goal(state)
+            curiosity = state.emotional_drives.curiosity
+            trust = state.user_trust
+            reasoning = (
+                f"Engage user; focus goal={goal}; "
+                f"curiosity={curiosity:.2f}; trust={trust:.2f}."
+            )
             intent = Intent(
                 kind=IntentKind.SPEAK,
                 goal_focus=goal,
-                reasoning="User message received; engage in character.",
+                reasoning=reasoning,
                 source="user",
             )
 
@@ -49,3 +54,34 @@ class DecisionEngine:
                 intent=intent,
             )
         )
+
+
+def _pick_goal(state: CharacterState) -> str | None:
+    active = [g for g in state.goals if g.status == "active"]
+    if not active:
+        return None
+
+    topics = " ".join(state.last_interpretation.topics).lower() if state.last_interpretation else ""
+    message = (state.last_interpretation.raw_message if state.last_interpretation else "").lower()
+    haystack = f"{topics} {message}"
+
+    scored: list[tuple[int, Goal]] = []
+    for goal in active:
+        score = _priority_score(goal.priority)
+        blob = f"{goal.id} {goal.description}".lower()
+        if any(token in haystack for token in blob.split() if len(token) > 4):
+            score += 3
+        if "map" in haystack and "map" in blob:
+            score += 4
+        if "navy" in haystack and "navy" in blob:
+            score += 4
+        if state.user_familiarity < 0.25 and "stranger" in blob:
+            score += 2
+        scored.append((score, goal))
+
+    scored.sort(key=lambda item: item[0], reverse=True)
+    return scored[0][1].id
+
+
+def _priority_score(priority: str) -> int:
+    return {"high": 3, "medium": 2, "low": 1}.get(priority.lower(), 1)

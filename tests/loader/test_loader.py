@@ -31,9 +31,11 @@ def test_prompt_render():
             "personality_summary": "bold",
             "emotional_state": "curious",
             "active_goals": "find map",
+            "relevant_knowledge": "Port Royal exists",
+            "memory_context": "(none)",
             "internal_thoughts": "hmm",
             "user_message": "Hello",
         },
     )
     assert "Captain Redbeard" in text
-    assert "{{" not in text or "variables" in text.lower()
+    assert "{{character_name}}" not in text

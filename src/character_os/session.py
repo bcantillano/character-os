@@ -37,6 +37,7 @@ class CharacterSession:
         self,
         character_id: str = "captain-redbeard",
         llm: LLMProvider | None = None,
+        provider_name: str | None = None,
         tick_interval_seconds: float = DEFAULT_TICK_INTERVAL_SECONDS,
         enable_scheduler: bool = False,
         data_dir: Path | None = None,
@@ -49,7 +50,8 @@ class CharacterSession:
         self.character = load_character(character_id)
         self.world = load_world(self.character.world)
         self.prompts = PromptLoader()
-        self.llm = llm or create_provider()
+        self.llm = llm or create_provider(provider_name)
+        self.provider_name = provider_name or type(self.llm).__name__
         self.last_response: SessionResult | None = None
         self._pending: SessionResult | None = None
 
@@ -75,6 +77,7 @@ class CharacterSession:
             character_id=self.character.id,
             session_id=self.session_id,
             character_name=self.character.name,
+            get_memory_context=self.brain.memory_context,
         )
         decision = DecisionEngine(
             self.bus,
@@ -156,6 +159,7 @@ class CharacterSession:
             )
         user_message = interp.raw_message if interp else ""
 
+        memory_context = self.brain.memory_context()
         thought_vars = {
             "character_name": self.character.name,
             "character_description": self.character.description,
@@ -164,13 +168,13 @@ class CharacterSession:
             "active_goals": goals or "(none)",
             "interpretation": interpretation or "(none)",
             "decision": decision or "(none)",
+            "memory_context": memory_context,
         }
         response_vars = {
             **thought_vars,
             "user_message": user_message,
             "internal_thoughts": state.last_thoughts,
             "relevant_knowledge": "\n".join(knowledge_bits) or "(none)",
-            "memory_context": self.brain.memory_context(),
             "recent_dialogue": str(self.brain.conversation.state.recent_turns[-4:]),
         }
         return {

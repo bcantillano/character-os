@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+from typing import Any
 
 from character_os.llm.provider import LLMMessage, LLMProvider
 
@@ -14,18 +15,25 @@ class OpenAIProvider(LLMProvider):
         if not self.api_key:
             raise ValueError(
                 "OPENAI_API_KEY is required when using the OpenAI provider. "
-                "Set it in .env or use CHARACTER_OS_LLM_PROVIDER=stub."
+                "Copy .env.example to .env and set OPENAI_API_KEY, "
+                "or use CHARACTER_OS_LLM_PROVIDER=stub."
             )
+        self._client: Any = None
+
+    def _get_client(self):
+        if self._client is None:
+            try:
+                from openai import OpenAI
+            except ImportError as exc:
+                raise ImportError(
+                    "openai package not installed. "
+                    "Install with: pip install 'character-os[openai]'"
+                ) from exc
+            self._client = OpenAI(api_key=self.api_key)
+        return self._client
 
     def complete(self, messages: list[LLMMessage], *, temperature: float = 0.7) -> str:
-        try:
-            from openai import OpenAI
-        except ImportError as exc:
-            raise ImportError(
-                "openai package not installed. Install with: pip install 'character-os[openai]'"
-            ) from exc
-
-        client = OpenAI(api_key=self.api_key)
+        client = self._get_client()
         response = client.chat.completions.create(
             model=self.model,
             temperature=temperature,

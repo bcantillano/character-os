@@ -22,6 +22,9 @@ def create_provider(name: str | None = None) -> LLMProvider:
     """Factory for configured providers. Default: stub (no API key required)."""
     import os
 
+    from character_os.env import load_env
+
+    load_env()
     provider_name = (name or os.getenv("CHARACTER_OS_LLM_PROVIDER") or "stub").lower()
     if provider_name == "openai":
         from character_os.llm.providers.openai import OpenAIProvider
