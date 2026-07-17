@@ -57,6 +57,7 @@ def _tts_from_dict(raw: dict[str, Any] | None) -> TTSProfile:
         response_format=str(raw.get("format") or raw.get("response_format") or "mp3"),
         speed=float(raw.get("speed", 1.0)),
         normalize_speech=bool(raw.get("normalize_speech", False)),
+        emotion_overlay=bool(raw.get("emotion_overlay", True)),
     )
 
 

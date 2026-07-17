@@ -18,6 +18,7 @@ class ResponseGenerator:
         character_id: str,
         session_id: str,
         on_response=None,
+        prompt_overrides: dict[str, str] | None = None,
     ) -> None:
         self.bus = bus
         self.prompts = prompts
@@ -26,6 +27,7 @@ class ResponseGenerator:
         self.on_response = on_response
         self.character_id = character_id
         self.session_id = session_id
+        self.prompt_overrides = prompt_overrides or {}
 
     def wire(self) -> None:
         self.bus.subscribe(ThoughtsGeneratedEvent, self.on_thoughts)
@@ -34,7 +36,10 @@ class ResponseGenerator:
         ctx = self.get_context()
         vars_ = dict(ctx["response_vars"])
         vars_["internal_thoughts"] = event.thoughts
-        template = self.prompts.load("response_generator")
+        template = self.prompts.load(
+            "response_generator",
+            self.prompt_overrides.get("response_generator"),
+        )
         prompt = self.prompts.render(template, vars_)
         text = self.llm.complete(
             [

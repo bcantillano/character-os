@@ -82,6 +82,8 @@ class TTSProfile:
     speed: float = 1.0
     # Soften dialect orthography for TTS only (printed text unchanged).
     normalize_speech: bool = False
+    # Append subtle drive-based delivery hints to instructions at speak time.
+    emotion_overlay: bool = True
 
 
 @dataclass

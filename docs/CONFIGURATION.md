@@ -76,6 +76,7 @@ Optional. Separate from `personality.voice` (dialogue writing style). Used when 
 | `speed` | `1.0` | Playback speed (provider-dependent) |
 | `instructions` | _(empty)_ | Style prompt for `gpt-4o-mini-tts` (ignored by `tts-1`) |
 | `normalize_speech` | `false` | Soften dialect orthography for TTS only (CLI text unchanged) |
+| `emotion_overlay` | `true` | Append mild delivery hints from current emotional drives |
 
 ### assets/
 

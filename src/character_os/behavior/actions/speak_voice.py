@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import replace
 from pathlib import Path
 
-from character_os.core.types import TTSProfile
+from character_os.core.types import EmotionalDrives, TTSProfile
 from character_os.events.types import ResponseReadyEvent, SpeechSynthesizedEvent
-from character_os.voice.playback import play_audio
+from character_os.voice.emotion_overlay import emotion_delivery_overlay
+from character_os.voice.playback import play_audio, stop_audio
 from character_os.voice.provider import TTSProvider
 from character_os.voice.speech_text import normalize_for_speech
 
@@ -24,6 +27,7 @@ class SpeakVoiceAction:
         character_id: str,
         session_id: str,
         play: bool = False,
+        get_drives: Callable[[], EmotionalDrives] | None = None,
     ) -> None:
         self.bus = bus
         self.tts = tts
@@ -32,10 +36,25 @@ class SpeakVoiceAction:
         self.character_id = character_id
         self.session_id = session_id
         self.play = play
+        self.get_drives = get_drives
         self.last_audio_path: Path | None = None
 
     def wire(self) -> None:
         self.bus.subscribe(ResponseReadyEvent, self._on_response_ready)
+
+    def stop(self) -> None:
+        """Stop background playback (session close / interrupt)."""
+        stop_audio()
+
+    def _profile_for_speak(self) -> TTSProfile:
+        if not self.profile.emotion_overlay or self.get_drives is None:
+            return self.profile
+        overlay = emotion_delivery_overlay(self.get_drives())
+        if not overlay:
+            return self.profile
+        base = (self.profile.instructions or "").rstrip()
+        merged = f"{base}\n\n{overlay}" if base else overlay
+        return replace(self.profile, instructions=merged)
 
     def _on_response_ready(self, event: ResponseReadyEvent) -> None:
         text = (event.text or "").strip()
@@ -48,10 +67,13 @@ class SpeakVoiceAction:
         if not speak_text.strip():
             speak_text = text
 
+        # New speech interrupts any still-playing prior clip.
+        stop_audio()
+
         ext = self.profile.response_format if self.profile.response_format else "mp3"
         # Stub writes .txt; keep requested stem for openai.
         output_path = self.output_dir / f"{event.event_id}.{ext}"
-        path = self.tts.synthesize(speak_text, self.profile, output_path)
+        path = self.tts.synthesize(speak_text, self._profile_for_speak(), output_path)
         self.last_audio_path = path
 
         self.bus.publish(
@@ -64,4 +86,5 @@ class SpeakVoiceAction:
             )
         )
         if self.play:
-            play_audio(path)
+            # Non-blocking so the CLI can accept the next message while audio plays.
+            play_audio(path, block=False)

@@ -38,7 +38,8 @@ The monologue should:
   - Building trust / trusted-enough partner: do **not** re-open "can I trust them?" from scratch every turn; note the plan, risk, or next step instead; a brief wary edge is enough
 - Notice and use what I already know (names, preferences, family) when relevant
 - Show personality (flaws, biases, distractions)
-- Feel imperfect and human — not analytical or robotic
+- Feel imperfect and in-character — not like a generic AI assistant
+- Do not invent outside events (weather, news, air quality) the person never mentioned
 - Never break character or reference being an AI
 
 Do not include dialogue. Do not address the user directly.

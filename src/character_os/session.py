@@ -107,6 +107,7 @@ class CharacterSession:
             get_context=self._context,
             character_id=self.character.id,
             session_id=self.session_id,
+            prompt_overrides=self.character.prompts,
         )
         executor.register(IntentKind.SPEAK, speak)
         executor.register(IntentKind.WAIT, WaitAction())
@@ -119,6 +120,7 @@ class CharacterSession:
             get_context=self._context,
             character_id=self.character.id,
             session_id=self.session_id,
+            prompt_overrides=self.character.prompts,
         )
 
         interpreter.wire()
@@ -144,6 +146,7 @@ class CharacterSession:
                 character_id=self.character.id,
                 session_id=self.session_id,
                 play=tts_play,
+                get_drives=lambda: self.brain.state.emotional_drives,
             )
             # Wire before session ResponseReady handler so SessionResult includes audio_path.
             self.speak_voice.wire()
@@ -208,6 +211,14 @@ class CharacterSession:
             for_speech=True,
             user_message=user_message,
         )
+        recent = self.brain.conversation.state.recent_turns[-6:]
+        if recent:
+            recent_dialogue = "\n".join(
+                f"{'User' if t.get('role') == 'user' else self.character.name}: {t.get('text', '')}"
+                for t in recent
+            )
+        else:
+            recent_dialogue = "(none yet this session)"
         thought_vars = {
             "character_name": self.character.name,
             "character_description": self.character.description,
@@ -228,7 +239,7 @@ class CharacterSession:
             "internal_thoughts": state.last_thoughts,
             "relevant_knowledge": "\n".join(knowledge_bits) or "(none)",
             "memory_context": speech_memory,
-            "recent_dialogue": str(self.brain.conversation.state.recent_turns[-4:]),
+            "recent_dialogue": recent_dialogue,
         }
         return {
             "thought_vars": thought_vars,
@@ -254,5 +265,7 @@ class CharacterSession:
 
     def close(self) -> None:
         self.scheduler.stop()
+        if self.speak_voice is not None:
+            self.speak_voice.stop()
         if self.persistence is not None:
             self.persistence.close()

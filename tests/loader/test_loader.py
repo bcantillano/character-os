@@ -18,13 +18,16 @@ def test_load_lumen_companion():
     assert character.name == "Lumen"
     assert character.world == "everyday-present"
     assert character.tts.voice == "cedar"
-    assert character.tts.speed == 0.88
+    assert character.tts.speed == 0.90
     assert character.tts.normalize_speech is False
+    assert character.tts.emotion_overlay is True
     assert "lumen" in character.tts.instructions.lower()
     assert "deliberately" in character.tts.instructions.lower()
     assert any(g.id == "understand_people" for g in character.goals)
-    assert character.emotional_drives.curiosity >= 0.7
+    assert character.emotional_drives.curiosity == 0.55
     assert character.emotional_drives.excitement < 0.4
+    assert "response_generator" in character.prompts
+    assert "internal_thoughts" in character.prompts
 
 
 def test_load_caribbean_world():
@@ -60,11 +63,24 @@ def test_prompt_render():
             "relevant_knowledge": "Port Royal exists",
             "internal_thoughts": "hmm",
             "user_message": "Hello",
+            "recent_dialogue": "User: Hello",
         },
     )
     assert "Captain Redbeard" in text
-    assert "{{character_name}}" not in text
-    assert "{{relationship_stance}}" not in text
+    assert "{{" not in text
+    assert "Recent dialogue" in loader.load("response_generator")
     assert "Known facts about this person" in loader.load("response_generator")
     assert "Relationship with this person" in loader.load("response_generator")
     assert "Relationship with this person" in loader.load("internal_thoughts")
+
+
+def test_lumen_prompt_override_loads():
+    loader = PromptLoader()
+    character = load_character("lumen")
+    text = loader.load(
+        "response_generator",
+        override_path=character.prompts["response_generator"],
+    )
+    assert "default: no question" in text.lower()
+    assert "that sounds like" in text.lower()
+    assert "support" in text.lower()

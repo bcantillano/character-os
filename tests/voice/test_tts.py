@@ -64,17 +64,31 @@ def test_speak_voice_publishes_event(tmp_path: Path):
     assert Path(seen[0].audio_path).is_file()
 
 
-def test_session_tts_stub_attaches_audio_path(tmp_path: Path):
-    session = CharacterSession(
-        llm=StubProvider(),
-        persist=False,
-        data_dir=tmp_path,
-        enable_tts=True,
-        tts_provider_name="stub",
-        tts_play=False,
+def test_speak_voice_merges_emotion_overlay(tmp_path: Path):
+    from character_os.core.types import EmotionalDrives
+
+    class CaptureTTS(StubTTSProvider):
+        def __init__(self) -> None:
+            self.last_profile: TTSProfile | None = None
+
+        def synthesize(self, text: str, profile: TTSProfile, output_path: Path) -> Path:
+            self.last_profile = profile
+            return super().synthesize(text, profile, output_path)
+
+    bus = EventBus()
+    capture = CaptureTTS()
+    action = SpeakVoiceAction(
+        bus,
+        capture,
+        TTSProfile(voice="cedar", instructions="Base voice.", emotion_overlay=True),
+        tmp_path,
+        character_id="lumen",
+        session_id="s1",
+        play=False,
+        get_drives=lambda: EmotionalDrives(curiosity=0.9, fear=0.2, excitement=0.3),
     )
-    result = session.send_message("Hello captain")
-    assert result.text
-    assert result.audio_path
-    assert Path(result.audio_path).is_file()
-    session.close()
+    action.wire()
+    bus.publish(ResponseReadyEvent(text="Hello", thoughts=""))
+    assert capture.last_profile is not None
+    assert "Base voice." in capture.last_profile.instructions
+    assert "curiosity" in capture.last_profile.instructions.lower()
