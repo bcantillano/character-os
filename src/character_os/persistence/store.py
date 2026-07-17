@@ -36,6 +36,7 @@ class CharacterPersistence:
         for fact in self.memories.list_facts(self.character_id):
             store.add(fact, dirty=False)
         self._sync_dedupe(store)
+        self._sync_forget(store)
         return store
 
     def dedupe_memories(self) -> int:
@@ -44,6 +45,14 @@ class CharacterPersistence:
         for fact in self.memories.list_facts(self.character_id):
             store.add(fact, dirty=False)
         return self._sync_dedupe(store)
+
+    def forget_stale_memories(self, memory: MemoryStore | None = None) -> int:
+        """Archive active facts at/below importance threshold. Returns count archived."""
+        if memory is None:
+            memory = MemoryStore()
+            for fact in self.memories.list_facts(self.character_id):
+                memory.add(fact, dirty=False)
+        return self._sync_forget(memory)
 
     def _sync_dedupe(self, store: MemoryStore) -> int:
         removed = store.dedupe()
@@ -54,6 +63,16 @@ class CharacterPersistence:
             self.memories.upsert(self.character_id, fact)
         store.clear_dirty()
         return len(removed)
+
+    def _sync_forget(self, store: MemoryStore) -> int:
+        forgotten = store.forget_stale()
+        if forgotten:
+            self.memories.archive_facts(self.character_id, forgotten)
+        return len(forgotten)
+
+    def archive_memories(self, facts: list[MemoryFact]) -> int:
+        """Archive the given facts (already removed from the in-memory store)."""
+        return self.memories.archive_facts(self.character_id, facts)
 
     def load_drives(self, fallback: EmotionalDrives) -> EmotionalDrives:
         return self.emotions.load(self.character_id) or fallback

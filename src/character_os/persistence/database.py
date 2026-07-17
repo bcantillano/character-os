@@ -38,6 +38,16 @@ CREATE TABLE IF NOT EXISTS long_term_memories (
     updated_at TEXT NOT NULL DEFAULT (datetime('now')),
     PRIMARY KEY (character_id, memory_id)
 );
+
+CREATE TABLE IF NOT EXISTS archived_memories (
+    character_id TEXT NOT NULL,
+    memory_id TEXT NOT NULL,
+    content TEXT NOT NULL,
+    importance REAL NOT NULL,
+    tags TEXT NOT NULL DEFAULT '[]',
+    archived_at TEXT NOT NULL DEFAULT (datetime('now')),
+    PRIMARY KEY (character_id, memory_id)
+);
 """
 
 

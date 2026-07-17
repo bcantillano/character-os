@@ -109,6 +109,9 @@ class BrainOrchestrator:
         self.state.tick_count += 1
         self.state.emotional_drives = apply_tick_decay(self.state.emotional_drives)
         self.memory.decay_importance()
+        forgotten = self.memory.forget_stale()
+        if forgotten and self.persistence is not None:
+            self.persistence.archive_memories(forgotten)
         self.state.emotional_drives = nudge(self.state.emotional_drives, energy=0.01)
 
         self.bus.publish(
@@ -116,10 +119,14 @@ class BrainOrchestrator:
                 character_id=self.character.id,
                 session_id=self.session_id,
                 trigger="time_tick",
-                summary=f"Tick {event.tick_index}: internal state updated",
+                summary=(
+                    f"Tick {event.tick_index}: internal state updated"
+                    + (f"; archived {len(forgotten)} memories" if forgotten else "")
+                ),
                 state_snapshot={
                     "drives": self.state.emotional_drives.as_dict(),
                     "tick_count": self.state.tick_count,
+                    "archived_count": len(forgotten),
                 },
             )
         )

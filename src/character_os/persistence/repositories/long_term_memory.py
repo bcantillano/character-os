@@ -98,6 +98,55 @@ class LongTermMemoryRepository:
         )
         conn.commit()
 
+    def archive_facts(self, character_id: str, facts: list[MemoryFact]) -> int:
+        """Move facts into archived_memories and delete them from active memory."""
+        if not facts:
+            return 0
+        conn = self.db.connect()
+        for fact in facts:
+            conn.execute(
+                """
+                INSERT INTO archived_memories (
+                    character_id, memory_id, content, importance, tags, archived_at
+                )
+                VALUES (?, ?, ?, ?, ?, datetime('now'))
+                ON CONFLICT(character_id, memory_id) DO UPDATE SET
+                    content = excluded.content,
+                    importance = excluded.importance,
+                    tags = excluded.tags,
+                    archived_at = datetime('now')
+                """,
+                (
+                    character_id,
+                    fact.id,
+                    fact.content,
+                    fact.importance,
+                    json.dumps(fact.tags),
+                ),
+            )
+        conn.executemany(
+            """
+            DELETE FROM long_term_memories
+            WHERE character_id = ? AND memory_id = ?
+            """,
+            [(character_id, fact.id) for fact in facts],
+        )
+        conn.commit()
+        return len(facts)
+
+    def list_archived(self, character_id: str) -> list[MemoryFact]:
+        conn = self.db.connect()
+        rows = conn.execute(
+            """
+            SELECT memory_id, content, importance, tags
+            FROM archived_memories
+            WHERE character_id = ?
+            ORDER BY archived_at DESC
+            """,
+            (character_id,),
+        ).fetchall()
+        return [_row_to_fact(row) for row in rows]
+
 
 def _row_to_fact(row) -> MemoryFact:
     tags = json.loads(row["tags"]) if row["tags"] else []

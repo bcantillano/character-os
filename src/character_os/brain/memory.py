@@ -10,6 +10,9 @@ _NAME_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Facts at or below this importance are archived out of active long-term memory.
+FORGET_IMPORTANCE_THRESHOLD = 0.02
+
 
 @dataclass
 class MemoryFact:
@@ -70,6 +73,15 @@ class MemoryStore:
             fact.importance = max(0.0, fact.importance - amount)
             if fact.importance != before:
                 self._dirty_ids.add(fact.id)
+
+    def forget_stale(self, *, threshold: float = FORGET_IMPORTANCE_THRESHOLD) -> list[MemoryFact]:
+        """Remove facts at or below importance threshold. Returns the forgotten facts."""
+        forgotten: list[MemoryFact] = []
+        for fact in list(self._facts.values()):
+            if fact.importance <= threshold:
+                forgotten.append(fact)
+                self.remove(fact.id)
+        return forgotten
 
     def dedupe(self) -> list[str]:
         """Collapse near-duplicate facts in place. Returns removed fact ids."""

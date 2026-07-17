@@ -88,7 +88,7 @@ def main(argv: list[str] | None = None) -> int:
             session.close()
         return 0
 
-    print("Type a message. Commands: /quit  /tick  /state  /dedupe")
+    print("Type a message. Commands: /quit  /tick  /state  /dedupe  /forget")
     print()
 
     try:
@@ -126,6 +126,15 @@ def main(argv: list[str] | None = None) -> int:
                     session.brain.memory = session.persistence.load_memory_store()
                     print(f"[dedupe] removed {removed} duplicate row(s) from SQLite")
                 print(f"[dedupe] memories:\n{session.brain.memory_context()}")
+                continue
+            if line == "/forget":
+                if session.persistence is None:
+                    forgotten = session.brain.memory.forget_stale()
+                    print(f"[forget] archived {len(forgotten)} in-memory fact(s)")
+                else:
+                    forgotten = session.persistence.forget_stale_memories(session.brain.memory)
+                    print(f"[forget] archived {forgotten} fact(s) to SQLite archive")
+                print(f"[forget] active memories:\n{session.brain.memory_context()}")
                 continue
 
             result = session.send_message(line)
