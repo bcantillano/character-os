@@ -18,6 +18,19 @@ def test_canonicalize_name_variants():
     assert memory_key("name: Byron") == memory_key("The user's name is Byron")
 
 
+def test_pet_name_is_not_user_name():
+    """Possessive '…'s name is X' must not become the user's name."""
+    pet = "dog's name is Pixel"
+    assert canonicalize_fact_content(pet) == pet
+    assert memory_key(pet) != memory_key("The user's name is Pixel")
+    assert not memory_key(pet).startswith("name:")
+
+    store = MemoryStore()
+    store.add(MemoryFact(id="1", content=pet, importance=0.6))
+    store.dedupe()
+    assert store.all()[0].content == pet
+
+
 def test_canonicalize_prefers():
     assert canonicalize_fact_content("prefers honest deals over bloodshed") == (
         "The user prefers honest deals over bloodshed"

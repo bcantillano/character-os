@@ -6,7 +6,8 @@ import re
 from dataclasses import dataclass, field
 
 _NAME_RE = re.compile(
-    r"(?:the user's name is|user'?s name is|name is|name:)\s+([A-Za-z][\w'-]*)",
+    # Avoid matching "dog's name is Pixel" / "cat's name is …" as the user's name.
+    r"(?:the user's name is|user'?s name is|(?<!'s )name is|name:)\s+([A-Za-z][\w'-]*)",
     re.IGNORECASE,
 )
 
