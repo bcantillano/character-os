@@ -72,3 +72,32 @@ Characters and worlds are defined through YAML configuration and Markdown prompt
 - `prompts/` — editable LLM prompt templates
 
 See `docs/CONFIGURATION.md` for full schemas.
+
+---
+
+## How to run
+
+From the project root:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e ".[openai,dev]"
+cp .env.example .env   # set OPENAI_API_KEY if using OpenAI
+```
+
+Chat (stub LLM, no API key):
+
+```bash
+character-os --character captain-redbeard
+```
+
+Live OpenAI:
+
+```bash
+character-os --provider openai --character captain-redbeard
+```
+
+Useful flags: `--show-thoughts`, `--debug-stages`, `--enable-ticks`, `--once "hello"`, `--no-persist`.
+
+Run from the repo with the venv activated (`character-os` is installed into that environment). Equivalent: `python -m character_os.cli.chat …`.
