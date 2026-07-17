@@ -35,7 +35,25 @@ class CharacterPersistence:
         store = MemoryStore()
         for fact in self.memories.list_facts(self.character_id):
             store.add(fact, dirty=False)
+        self._sync_dedupe(store)
         return store
+
+    def dedupe_memories(self) -> int:
+        """Collapse duplicate facts in SQLite. Returns number of rows deleted."""
+        store = MemoryStore()
+        for fact in self.memories.list_facts(self.character_id):
+            store.add(fact, dirty=False)
+        return self._sync_dedupe(store)
+
+    def _sync_dedupe(self, store: MemoryStore) -> int:
+        removed = store.dedupe()
+        if removed:
+            self.memories.delete_many(self.character_id, removed)
+        # Persist keepers whose content/importance/tags were upgraded.
+        for fact in store.dirty_facts():
+            self.memories.upsert(self.character_id, fact)
+        store.clear_dirty()
+        return len(removed)
 
     def load_drives(self, fallback: EmotionalDrives) -> EmotionalDrives:
         return self.emotions.load(self.character_id) or fallback

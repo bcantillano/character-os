@@ -4,12 +4,8 @@ from __future__ import annotations
 
 import re
 
-from character_os.brain.memory import MemoryFact, MemoryStore
+from character_os.brain.memory import MemoryFact, MemoryStore, extract_name
 
-_NAME_RE = re.compile(
-    r"(?:the user's name is|user'?s name is|name is|name:)\s+([A-Za-z][\w'-]*)",
-    re.IGNORECASE,
-)
 _RECALL_RE = re.compile(
     r"\b(remember|recall|my name|who am i|what('?s| is) my name)\b",
     re.IGNORECASE,
@@ -18,9 +14,9 @@ _RECALL_RE = re.compile(
 
 def extract_known_name(facts: list[MemoryFact]) -> str | None:
     for fact in facts:
-        match = _NAME_RE.search(fact.content)
-        if match:
-            return match.group(1)
+        name = extract_name(fact.content)
+        if name:
+            return name
     return None
 
 

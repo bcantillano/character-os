@@ -88,7 +88,7 @@ def main(argv: list[str] | None = None) -> int:
             session.close()
         return 0
 
-    print("Type a message. Commands: /quit  /tick  /state")
+    print("Type a message. Commands: /quit  /tick  /state  /dedupe")
     print()
 
     try:
@@ -113,6 +113,16 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"[state] drives={s.emotional_drives.as_dict()}")
                 print(f"[state] ticks={s.tick_count}")
                 print(f"[state] memories:\n{session.brain.memory_context()}")
+                continue
+            if line == "/dedupe":
+                if session.persistence is None:
+                    removed = session.brain.memory.dedupe()
+                    print(f"[dedupe] removed {len(removed)} in-memory duplicate(s)")
+                else:
+                    removed = session.persistence.dedupe_memories()
+                    session.brain.memory = session.persistence.load_memory_store()
+                    print(f"[dedupe] removed {removed} duplicate row(s) from SQLite")
+                print(f"[dedupe] memories:\n{session.brain.memory_context()}")
                 continue
 
             result = session.send_message(line)

@@ -5,6 +5,7 @@ from __future__ import annotations
 from character_os.brain.conversation import ConversationStore
 from character_os.brain.emotion import apply_tick_decay, nudge
 from character_os.brain.memory import MemoryStore
+from character_os.brain.relationship import apply_relationship_update
 from character_os.brain.speech_memory import format_speech_memory_context
 from character_os.core.types import CharacterDefinition, CharacterState, WorldDefinition
 from character_os.events.bus import EventBus
@@ -75,7 +76,7 @@ class BrainOrchestrator:
             excitement=0.03,
             energy=-0.01,
         )
-        self.state.user_familiarity = min(1.0, self.state.user_familiarity + 0.02)
+        trust_delta, familiarity_delta = apply_relationship_update(self.state, interp)
 
         self._remember_notable_facts(interp.notable_facts, interp.raw_message)
 
@@ -84,11 +85,16 @@ class BrainOrchestrator:
                 character_id=self.character.id,
                 session_id=self.session_id,
                 trigger="user_message",
-                summary=f"Interpreted user intent={interp.intent}",
+                summary=(
+                    f"Interpreted user intent={interp.intent}; "
+                    f"trust{trust_delta:+.3f} familiarity{familiarity_delta:+.3f}"
+                ),
                 state_snapshot={
                     "drives": self.state.emotional_drives.as_dict(),
                     "trust": self.state.user_trust,
                     "familiarity": self.state.user_familiarity,
+                    "trust_delta": trust_delta,
+                    "familiarity_delta": familiarity_delta,
                 },
             )
         )
@@ -123,13 +129,19 @@ class BrainOrchestrator:
         return
 
     def _remember_notable_facts(self, facts: list[str], raw_message: str) -> None:
+        from character_os.brain.memory import MemoryFact, canonicalize_fact_content
+
         for fact in facts:
             if not fact or fact.lower() in {"none", "none yet", "n/a"}:
                 continue
             content = fact if fact != raw_message else f"User said: {fact}"
+            content = canonicalize_fact_content(content)
             existing = self.memory.find_similar(content)
             if existing is not None:
                 existing.importance = min(1.0, existing.importance + 0.05)
+                # Upgrade short / non-canonical wording when a richer form arrives.
+                if len(content) > len(existing.content):
+                    existing.content = content
                 self.memory.mark_dirty(existing.id)
                 continue
             if self.persistence is not None:
@@ -137,8 +149,6 @@ class BrainOrchestrator:
                 self.memory.add(stored, dirty=False)  # already written via remember_fact
             else:
                 from uuid import uuid4
-
-                from character_os.brain.memory import MemoryFact
 
                 self.memory.add(
                     MemoryFact(id=str(uuid4()), content=content, importance=0.6, tags=["interaction"])

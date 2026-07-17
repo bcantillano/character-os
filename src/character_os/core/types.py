@@ -115,6 +115,9 @@ class Interpretation:
     relationship_signals: str = ""
     notable_facts: list[str] = field(default_factory=list)
     raw_message: str = ""
+    # Optional numeric deltas from the interpreter (None → heuristic fallback).
+    trust_delta: float | None = None
+    familiarity_delta: float | None = None
 
 
 @dataclass

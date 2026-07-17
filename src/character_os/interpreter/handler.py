@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 from collections.abc import Callable
 
+from character_os.brain.memory import canonicalize_fact_content
 from character_os.core.types import Interpretation
 from character_os.events.bus import EventBus
 from character_os.events.types import InputInterpretedEvent, UserMessageEvent
@@ -53,7 +54,7 @@ class ConversationInterpreter:
         )
         interpretation = self._parse(raw, event.text)
         interpretation.notable_facts = [
-            _canonicalize_fact(f) for f in interpretation.notable_facts
+            canonicalize_fact_content(f) for f in interpretation.notable_facts
         ]
         self.bus.publish(
             InputInterpretedEvent(
@@ -74,6 +75,8 @@ class ConversationInterpreter:
             relationship_signals=fields.get("relationship_signals") or "",
             notable_facts=facts,
             raw_message=message,
+            trust_delta=_parse_float(fields.get("trust_delta")),
+            familiarity_delta=_parse_float(fields.get("familiarity_delta")),
         )
 
 
@@ -120,14 +123,17 @@ def _heuristic_topics(message: str) -> list[str]:
     return words[:3]
 
 
-def _canonicalize_fact(fact: str) -> str:
-    """Normalize common fact labels into clear declarative form."""
-    text = fact.strip()
-    lowered = text.lower()
-    if lowered.startswith("name:"):
-        return f"The user's name is {text.split(':', 1)[1].strip()}"
-    if lowered.startswith("preference:") or lowered.startswith("prefers:"):
-        return f"The user {text.split(':', 1)[1].strip()}"
-    if lowered.startswith("preference for"):
-        return f"The user has a {text}"
-    return text
+def _parse_float(raw: str | None) -> float | None:
+    if raw is None:
+        return None
+    text = raw.strip().lower()
+    if not text or text in {"none", "n/a", "na"}:
+        return None
+    # Allow trailing commentary: "0.05 (small bump)"
+    match = re.search(r"[-+]?\d*\.?\d+", text)
+    if not match:
+        return None
+    try:
+        return float(match.group(0))
+    except ValueError:
+        return None
