@@ -14,9 +14,25 @@ from character_os.behavior.actions.speak_voice import SpeakVoiceAction
 
 def test_load_redbeard_tts_profile():
     character = load_character("captain-redbeard")
-    assert character.tts.voice == "onyx"
+    assert character.tts.voice == "ash"
     assert character.tts.provider == "openai"
-    assert "pirate" in character.tts.instructions.lower()
+    assert character.tts.speed == 0.95
+    assert character.tts.normalize_speech is True
+    assert "pirate impression" in character.tts.instructions.lower()
+    assert "gravelly" in character.tts.instructions.lower()
+
+
+def test_normalize_for_speech_softens_dialect():
+    from character_os.voice.speech_text import normalize_for_speech
+
+    raw = "Arrr, Byron, me heart's a tempest! Ye best keep yer wits fer the navy!"
+    spoken = normalize_for_speech(raw)
+    assert "Arrr" not in spoken
+    assert "ye" not in spoken.lower().split()
+    assert "my heart" in spoken.lower()
+    assert "your wits" in spoken.lower()
+    assert "for the navy" in spoken.lower()
+    assert "Byron" in spoken
 
 
 def test_stub_tts_writes_sidecar(tmp_path: Path):

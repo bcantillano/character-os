@@ -12,6 +12,21 @@ def test_load_captain_redbeard():
     assert character.knowledge
 
 
+def test_load_lumen_companion():
+    character = load_character("lumen")
+    assert character.id == "lumen"
+    assert character.name == "Lumen"
+    assert character.world == "everyday-present"
+    assert character.tts.voice == "cedar"
+    assert character.tts.speed == 0.88
+    assert character.tts.normalize_speech is False
+    assert "lumen" in character.tts.instructions.lower()
+    assert "deliberately" in character.tts.instructions.lower()
+    assert any(g.id == "understand_people" for g in character.goals)
+    assert character.emotional_drives.curiosity >= 0.7
+    assert character.emotional_drives.excitement < 0.4
+
+
 def test_load_caribbean_world():
     world = load_world("caribbean-1790")
     assert world.id == "caribbean-1790"
@@ -19,6 +34,15 @@ def test_load_caribbean_world():
     assert "port_royal" in ids
     assert "royal_navy" in ids
     assert "pieces_of_eight" in ids
+
+
+def test_load_everyday_present_world():
+    world = load_world("everyday-present")
+    assert world.id == "everyday-present"
+    ids = {e.id for e in world.knowledge}
+    assert "companion_role" in ids
+    assert "emotions_as_signals" in ids
+    assert "household_presence" in ids
 
 
 def test_prompt_render():

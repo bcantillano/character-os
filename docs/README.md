@@ -98,6 +98,12 @@ Live OpenAI:
 character-os --provider openai --character captain-redbeard
 ```
 
+Companion robot (Phase 1 reference; easier TTS target):
+
+```bash
+character-os --provider openai --tts --tts-play --character lumen
+```
+
 Useful flags: `--show-thoughts`, `--debug-stages`, `--enable-ticks`, `--once "hello"`, `--no-persist`, `--tts` / `--tts-play` (Phase 1b voice).
 
 Live OpenAI chat with spoken replies:

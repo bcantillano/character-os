@@ -8,6 +8,7 @@ from character_os.core.types import TTSProfile
 from character_os.events.types import ResponseReadyEvent, SpeechSynthesizedEvent
 from character_os.voice.playback import play_audio
 from character_os.voice.provider import TTSProvider
+from character_os.voice.speech_text import normalize_for_speech
 
 
 class SpeakVoiceAction:
@@ -41,10 +42,16 @@ class SpeakVoiceAction:
         if not text:
             return
 
+        speak_text = (
+            normalize_for_speech(text) if self.profile.normalize_speech else text
+        )
+        if not speak_text.strip():
+            speak_text = text
+
         ext = self.profile.response_format if self.profile.response_format else "mp3"
         # Stub writes .txt; keep requested stem for openai.
         output_path = self.output_dir / f"{event.event_id}.{ext}"
-        path = self.tts.synthesize(text, self.profile, output_path)
+        path = self.tts.synthesize(speak_text, self.profile, output_path)
         self.last_audio_path = path
 
         self.bus.publish(

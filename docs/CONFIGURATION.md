@@ -75,6 +75,7 @@ Optional. Separate from `personality.voice` (dialogue writing style). Used when 
 | `format` | `mp3` | Audio container (`mp3`, `wav`, …) |
 | `speed` | `1.0` | Playback speed (provider-dependent) |
 | `instructions` | _(empty)_ | Style prompt for `gpt-4o-mini-tts` (ignored by `tts-1`) |
+| `normalize_speech` | `false` | Soften dialect orthography for TTS only (CLI text unchanged) |
 
 ### assets/
 
@@ -85,6 +86,10 @@ characters/captain-redbeard/
 ├── character.yaml
 └── assets/
     └── portrait.png
+
+characters/lumen/
+├── character.yaml
+└── assets/
 ```
 
 ---

@@ -73,12 +73,25 @@ assets:
   portrait: assets/portrait.png
 
 # Phase 1b TTS profile (personality.voice is writing style; this is speech synthesis)
+# Aim: tough charismatic man — not a pirate impression. Speech text is softened separately.
 tts:
   provider: openai
-  voice: onyx
+  voice: ash
   model: gpt-4o-mini-tts
   format: mp3
+  speed: 0.95
+  normalize_speech: true
   instructions: >
-    Speak as a gruff theatrical Caribbean pirate captain. Warm gravel in the
-    chest voice, slightly theatrical cadence, never cartoonish. Mutters asides
-    under the breath when uneasy. English with a mild salty swagger.
+    Speak in first person as a weathered, charismatic sea captain with grit —
+    a real tough man with swagger, not a performer.
+
+    Critical: do NOT do a pirate voice, pirate accent, or pirate impression.
+    Do not "try to sound like a pirate." If the script has colorful wording,
+    speak it in plain natural English with attitude.
+
+    Character color: gravelly chest voice; crooked confidence; impatience;
+    world-weary humor that barks. Excitement lifts; suspicion drops and slows.
+    Strong pitch movement and natural pauses — never monotone, never corporate,
+    never polite assistant, never cartoon.
+
+    Accent: everyday natural English only.

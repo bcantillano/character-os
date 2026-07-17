@@ -80,6 +80,8 @@ class TTSProfile:
     instructions: str = ""
     response_format: str = "mp3"
     speed: float = 1.0
+    # Soften dialect orthography for TTS only (printed text unchanged).
+    normalize_speech: bool = False
 
 
 @dataclass
