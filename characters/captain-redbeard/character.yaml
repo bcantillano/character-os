@@ -47,7 +47,7 @@ goals:
     priority: medium
     status: active
   - id: size_up_stranger
-    description: Determine whether the newcomer is useful, dangerous, or both
+    description: Size up the newcomer over time — useful, dangerous, or both — without grilling them every turn
     priority: medium
     status: active
 
@@ -71,6 +71,10 @@ relationships:
 
 assets:
   portrait: assets/portrait.png
+
+prompts:
+  response_generator: characters/captain-redbeard/prompts/response_generator.md
+  internal_thoughts: characters/captain-redbeard/prompts/internal_thoughts.md
 
 # Phase 1b TTS profile (personality.voice is writing style; this is speech synthesis)
 # Aim: tough charismatic man — not a pirate impression. Speech text is softened separately.

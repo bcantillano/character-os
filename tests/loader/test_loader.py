@@ -10,6 +10,27 @@ def test_load_captain_redbeard():
     assert character.emotional_drives.curiosity == 0.7
     assert any(g.id == "find_treasure_map" for g in character.goals)
     assert character.knowledge
+    assert "response_generator" in character.prompts
+    assert "internal_thoughts" in character.prompts
+    assert "without grilling" in next(
+        g.description for g in character.goals if g.id == "size_up_stranger"
+    ).lower()
+
+
+def test_redbeard_prompt_override_loads():
+    loader = PromptLoader()
+    character = load_character("captain-redbeard")
+    text = loader.load(
+        "response_generator",
+        override_path=character.prompts["response_generator"],
+    )
+    assert "default: no question mark" in text.lower()
+    assert "banned loops" in text.lower()
+    thoughts = loader.load(
+        "internal_thoughts",
+        override_path=character.prompts["internal_thoughts"],
+    )
+    assert "text-only" in thoughts.lower()
 
 
 def test_load_lumen_companion():
