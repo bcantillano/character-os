@@ -16,7 +16,9 @@ def test_persistence_round_trip(tmp_path: Path):
     memory = MemoryStore()
     memory.add(MemoryFact(id="m1", content="User prefers dark rum", importance=0.7, tags=["preference"]))
 
-    store.persist_runtime(drives, trust=0.35, familiarity=0.15, memory=memory)
+    written = store.persist_runtime(drives, trust=0.35, familiarity=0.15, memory=memory)
+    assert written == 1
+    assert memory.dirty_facts() == []
 
     loaded_drives = store.load_drives(EmotionalDrives())
     rel = store.load_relationship(0.0, 0.0)
@@ -29,6 +31,33 @@ def test_persistence_round_trip(tmp_path: Path):
     assert len(facts) == 1
     assert facts[0].content == "User prefers dark rum"
 
+    store.close()
+
+
+def test_incremental_persist_skips_clean_facts(tmp_path: Path):
+    db = Database(tmp_path / "test.sqlite3")
+    store = CharacterPersistence("captain-redbeard", db=db)
+
+    memory = MemoryStore()
+    memory.add(MemoryFact(id="m1", content="First fact", importance=0.5), dirty=True)
+    memory.add(MemoryFact(id="m2", content="Second fact", importance=0.5), dirty=True)
+    assert store.persist_runtime(EmotionalDrives(), 0.2, 0.1, memory) == 2
+
+    # Reload as clean, then only dirty one fact.
+    memory = store.load_memory_store()
+    assert memory.dirty_facts() == []
+    target = memory.find_similar("First fact")
+    assert target is not None
+    target.importance = 0.9
+    memory.mark_dirty(target.id)
+
+    written = store.persist_runtime(EmotionalDrives(energy=0.4), 0.2, 0.1, memory)
+    assert written == 1
+
+    reloaded = store.load_memory_store().all()
+    by_id = {f.id: f for f in reloaded}
+    assert by_id["m1"].importance == 0.9
+    assert by_id["m2"].importance == 0.5
     store.close()
 
 

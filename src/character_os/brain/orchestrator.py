@@ -5,6 +5,7 @@ from __future__ import annotations
 from character_os.brain.conversation import ConversationStore
 from character_os.brain.emotion import apply_tick_decay, nudge
 from character_os.brain.memory import MemoryStore
+from character_os.brain.speech_memory import format_speech_memory_context
 from character_os.core.types import CharacterDefinition, CharacterState, WorldDefinition
 from character_os.events.bus import EventBus
 from character_os.events.types import (
@@ -96,10 +97,7 @@ class BrainOrchestrator:
     def on_tick(self, event: TimeTickEvent) -> None:
         self.state.tick_count += 1
         self.state.emotional_drives = apply_tick_decay(self.state.emotional_drives)
-        if self.persistence is not None:
-            self.persistence.decay_memory_importance()
-        else:
-            self.memory.decay_importance()
+        self.memory.decay_importance()
         self.state.emotional_drives = nudge(self.state.emotional_drives, energy=0.01)
 
         self.bus.publish(
@@ -132,12 +130,11 @@ class BrainOrchestrator:
             existing = self.memory.find_similar(content)
             if existing is not None:
                 existing.importance = min(1.0, existing.importance + 0.05)
-                if self.persistence is not None:
-                    self.persistence.memories.upsert(self.character.id, existing)
+                self.memory.mark_dirty(existing.id)
                 continue
             if self.persistence is not None:
                 stored = self.persistence.remember_fact(content, importance=0.6, tags=["interaction"])
-                self.memory.add(stored)
+                self.memory.add(stored, dirty=False)  # already written via remember_fact
             else:
                 from uuid import uuid4
 
@@ -155,9 +152,12 @@ class BrainOrchestrator:
             self.state.user_trust,
             self.state.user_familiarity,
             self.memory,
+            only_dirty_memories=True,
         )
 
-    def memory_context(self) -> str:
+    def memory_context(self, *, for_speech: bool = False, user_message: str = "") -> str:
+        if for_speech:
+            return format_speech_memory_context(self.memory, user_message=user_message)
         facts = self.memory.all()[:8]
         if not facts:
             return "(no long-term memories yet)"

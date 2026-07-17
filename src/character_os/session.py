@@ -160,6 +160,10 @@ class CharacterSession:
         user_message = interp.raw_message if interp else ""
 
         memory_context = self.brain.memory_context()
+        speech_memory = self.brain.memory_context(
+            for_speech=True,
+            user_message=user_message,
+        )
         thought_vars = {
             "character_name": self.character.name,
             "character_description": self.character.description,
@@ -175,6 +179,7 @@ class CharacterSession:
             "user_message": user_message,
             "internal_thoughts": state.last_thoughts,
             "relevant_knowledge": "\n".join(knowledge_bits) or "(none)",
+            "memory_context": speech_memory,
             "recent_dialogue": str(self.brain.conversation.state.recent_turns[-4:]),
         }
         return {

@@ -31,11 +31,12 @@ def test_prompt_render():
             "personality_summary": "bold",
             "emotional_state": "curious",
             "active_goals": "find map",
-            "relevant_knowledge": "Port Royal exists",
             "memory_context": "(none)",
+            "relevant_knowledge": "Port Royal exists",
             "internal_thoughts": "hmm",
             "user_message": "Hello",
         },
     )
     assert "Captain Redbeard" in text
     assert "{{character_name}}" not in text
+    assert "Known facts about this person" in loader.load("response_generator")

@@ -34,7 +34,7 @@ class CharacterPersistence:
     def load_memory_store(self) -> MemoryStore:
         store = MemoryStore()
         for fact in self.memories.list_facts(self.character_id):
-            store.add(fact)
+            store.add(fact, dirty=False)
         return store
 
     def load_drives(self, fallback: EmotionalDrives) -> EmotionalDrives:
@@ -52,14 +52,24 @@ class CharacterPersistence:
         trust: float,
         familiarity: float,
         memory: MemoryStore,
-    ) -> None:
+        *,
+        only_dirty_memories: bool = True,
+    ) -> int:
+        """Persist drives/relationship always; memories only if dirty (default).
+
+        Returns the number of memory rows upserted.
+        """
         self.emotions.save(self.character_id, drives)
         self.relationships.save(
             self.character_id,
             RelationshipRecord(DEFAULT_ENTITY, trust, familiarity),
         )
-        for fact in memory.all():
+        facts = memory.dirty_facts() if only_dirty_memories else memory.all()
+        for fact in facts:
             self.memories.upsert(self.character_id, fact)
+        if only_dirty_memories:
+            memory.clear_dirty()
+        return len(facts)
 
     def decay_memory_importance(self, amount: float = 0.01) -> None:
         self.memories.decay_importance(self.character_id, amount)
