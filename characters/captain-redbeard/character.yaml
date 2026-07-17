@@ -71,3 +71,14 @@ relationships:
 
 assets:
   portrait: assets/portrait.png
+
+# Phase 1b TTS profile (personality.voice is writing style; this is speech synthesis)
+tts:
+  provider: openai
+  voice: onyx
+  model: gpt-4o-mini-tts
+  format: mp3
+  instructions: >
+    Speak as a gruff theatrical Caribbean pirate captain. Warm gravel in the
+    chest voice, slightly theatrical cadence, never cartoonish. Mutters asides
+    under the breath when uneasy. English with a mild salty swagger.

@@ -29,6 +29,7 @@ from character_os.response.handler import ResponseGenerator
 class SessionResult:
     text: str
     thoughts: str = ""
+    audio_path: str = ""
 
 
 class CharacterSession:
@@ -44,6 +45,9 @@ class CharacterSession:
         data_dir: Path | None = None,
         persist: bool = True,
         debug_stages: bool = False,
+        enable_tts: bool = False,
+        tts_provider_name: str | None = None,
+        tts_play: bool = False,
     ) -> None:
         self.character_id = character_id
         self.session_id = str(uuid4())
@@ -60,6 +64,8 @@ class CharacterSession:
         self.provider_name = provider_name or type(self.llm).__name__
         self.last_response: SessionResult | None = None
         self._pending: SessionResult | None = None
+        self.last_audio_path: Path | None = None
+        self.speak_voice = None
 
         self.persistence = create_persistence(self.character, data_dir=data_dir) if persist else None
         self.brain = BrainOrchestrator(
@@ -120,6 +126,28 @@ class CharacterSession:
         decision.wire()
         executor.wire()
         response.wire()
+
+        if enable_tts:
+            from character_os.behavior.actions.speak_voice import SpeakVoiceAction
+            from character_os.loader.paths import default_data_dir
+            from character_os.voice import create_tts_provider
+
+            root = data_dir or default_data_dir()
+            audio_dir = root / "audio" / self.character.id / self.session_id
+            # CLI/env provider overrides pack default; pack still supplies voice/model.
+            tts_name = tts_provider_name or self.character.tts.provider
+            self.speak_voice = SpeakVoiceAction(
+                self.bus,
+                create_tts_provider(tts_name),
+                self.character.tts,
+                audio_dir,
+                character_id=self.character.id,
+                session_id=self.session_id,
+                play=tts_play,
+            )
+            # Wire before session ResponseReady handler so SessionResult includes audio_path.
+            self.speak_voice.wire()
+
         self.bus.subscribe(ResponseReadyEvent, self._on_response_ready)
 
         self.registry.register("interpreter", lambda bus: None)
@@ -127,12 +155,22 @@ class CharacterSession:
         self.registry.register("decision", lambda bus: None)
         self.registry.register("behavior", lambda bus: None)
         self.registry.register("response", lambda bus: None)
+        if enable_tts:
+            self.registry.register("voice", lambda bus: None)
 
         if enable_scheduler:
             self.scheduler.start()
 
     def _on_response_ready(self, event: ResponseReadyEvent) -> None:
-        self._pending = SessionResult(text=event.text, thoughts=event.thoughts)
+        audio = ""
+        if self.speak_voice is not None and self.speak_voice.last_audio_path is not None:
+            audio = str(self.speak_voice.last_audio_path)
+            self.last_audio_path = self.speak_voice.last_audio_path
+        self._pending = SessionResult(
+            text=event.text,
+            thoughts=event.thoughts,
+            audio_path=audio,
+        )
         self.last_response = self._pending
 
     def _context(self) -> dict:

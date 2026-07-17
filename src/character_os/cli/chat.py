@@ -70,7 +70,27 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Disable SQLite persistence for this session",
     )
+    parser.add_argument(
+        "--tts",
+        nargs="?",
+        const="auto",
+        default=None,
+        metavar="PROVIDER",
+        help="Enable Phase 1b TTS (optional provider: stub|openai; default from character.yaml / CHARACTER_OS_TTS_PROVIDER)",
+    )
+    parser.add_argument(
+        "--tts-play",
+        action="store_true",
+        help="Play synthesized audio via system player (implies --tts)",
+    )
     args = parser.parse_args(argv)
+
+    enable_tts = args.tts is not None or args.tts_play or _env_flag("CHARACTER_OS_TTS")
+    tts_provider_name: str | None = None
+    if args.tts and args.tts != "auto":
+        tts_provider_name = args.tts
+    elif enable_tts and os.getenv("CHARACTER_OS_TTS_PROVIDER"):
+        tts_provider_name = os.getenv("CHARACTER_OS_TTS_PROVIDER")
 
     try:
         session = CharacterSession(
@@ -80,6 +100,9 @@ def main(argv: list[str] | None = None) -> int:
             enable_scheduler=args.enable_ticks and not args.once,
             persist=not args.no_persist,
             debug_stages=args.debug_stages,
+            enable_tts=enable_tts,
+            tts_provider_name=tts_provider_name,
+            tts_play=args.tts_play,
         )
     except (ValueError, ImportError) as exc:
         print(f"Error starting session: {exc}", file=sys.stderr)
@@ -88,6 +111,10 @@ def main(argv: list[str] | None = None) -> int:
     print(f"Character OS — chatting with {session.character.name}")
     print(f"World: {session.world.name}")
     print(f"Provider: {args.provider}")
+    if enable_tts:
+        tts_label = tts_provider_name or session.character.tts.provider
+        play_note = " + play" if args.tts_play else ""
+        print(f"TTS: {tts_label}{play_note} (voice={session.character.tts.voice})")
     if args.once:
         print()
         try:
@@ -95,6 +122,8 @@ def main(argv: list[str] | None = None) -> int:
             if args.show_thoughts and result.thoughts:
                 print(f"(thoughts) {result.thoughts}")
             print(f"{session.character.name}> {result.text}")
+            if result.audio_path:
+                print(f"[tts] {result.audio_path}")
         finally:
             session.close()
         return 0
@@ -195,6 +224,8 @@ def main(argv: list[str] | None = None) -> int:
             if args.show_thoughts and result.thoughts:
                 print(f"(thoughts) {result.thoughts}")
             print(f"{session.character.name}> {result.text}")
+            if result.audio_path:
+                print(f"[tts] {result.audio_path}")
             print()
     finally:
         session.close()

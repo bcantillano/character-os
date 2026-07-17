@@ -11,6 +11,7 @@ from character_os.events.types import (
     InputInterpretedEvent,
     IntentDecidedEvent,
     ResponseReadyEvent,
+    SpeechSynthesizedEvent,
     StateChangedEvent,
     ThoughtsGeneratedEvent,
     TimeTickEvent,
@@ -25,6 +26,7 @@ _STAGE_LABELS: dict[type[Event], str] = {
     IntentDecidedEvent: "Decide",
     ThoughtsGeneratedEvent: "Act/Thoughts",
     ResponseReadyEvent: "Act/Speak",
+    SpeechSynthesizedEvent: "Act/Voice",
     TimeTickEvent: "Tick",
 }
 
@@ -44,6 +46,8 @@ def _summarize(event: Event) -> str:
         return _clip(event.thoughts.replace("\n", " "), 60)
     if isinstance(event, ResponseReadyEvent):
         return _clip(event.text.replace("\n", " "), 60)
+    if isinstance(event, SpeechSynthesizedEvent):
+        return f"provider={event.provider} {_clip(event.audio_path, 50)}"
     if isinstance(event, TimeTickEvent):
         return f"tick={event.tick_index}"
     return ""

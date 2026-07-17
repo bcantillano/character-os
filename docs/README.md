@@ -38,9 +38,9 @@ No computer vision.
 
 No movement.
 
-No voice (TTS arrives in Phase 1b; speech recognition in Phase 3).
+Voice output (TTS) is Phase 1b and optional via `--tts` / `--tts-play`. Speech recognition remains Phase 3.
 
-The goal is to create a believable character through text conversation alone.
+The goal is to create a believable character through text conversation alone (Phase 1), then layer spoken delivery without changing the brain pipeline.
 
 Success means the user feels they met a character — not that they used an AI. See Phase 1 success criteria in `docs/ROADMAP.md` and the lifecycle in `docs/CHARACTER_LIFECYCLE.md`.
 
@@ -98,6 +98,12 @@ Live OpenAI:
 character-os --provider openai --character captain-redbeard
 ```
 
-Useful flags: `--show-thoughts`, `--debug-stages`, `--enable-ticks`, `--once "hello"`, `--no-persist`.
+Useful flags: `--show-thoughts`, `--debug-stages`, `--enable-ticks`, `--once "hello"`, `--no-persist`, `--tts` / `--tts-play` (Phase 1b voice).
+
+Live OpenAI chat with spoken replies:
+
+```bash
+character-os --provider openai --tts --tts-play --character captain-redbeard
+```
 
 Run from the repo with the venv activated (`character-os` is installed into that environment). Equivalent: `python -m character_os.cli.chat …`.

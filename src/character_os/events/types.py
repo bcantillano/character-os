@@ -72,6 +72,15 @@ class ResponseReadyEvent(Event):
     thoughts: str = ""
 
 
+@dataclass(frozen=True)
+class SpeechSynthesizedEvent(Event):
+    """Phase 1b: TTS finished for a spoken response."""
+
+    text: str = ""
+    audio_path: str = ""
+    provider: str = ""
+
+
 # Reserved for future phases (defined so the bus can accept them later).
 @dataclass(frozen=True)
 class VisionDetectedEvent(Event):
