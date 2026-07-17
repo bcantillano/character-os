@@ -106,6 +106,17 @@ character-os --provider openai --tts --tts-play --character lumen
 
 Useful flags: `--show-thoughts`, `--debug-stages`, `--enable-ticks`, `--once "hello"`, `--no-persist`, `--tts` / `--tts-play` (Phase 1b voice).
 
+### Character Studio (Phase 2)
+
+```bash
+character-os-studio list characters
+character-os-studio show character lumen
+character-os-studio memories lumen
+character-os-studio create-character my-bot --name "My Bot" --world everyday-present
+```
+
+See `docs/PHASE_2_STUDIO.md`.
+
 Live OpenAI chat with spoken replies:
 
 ```bash

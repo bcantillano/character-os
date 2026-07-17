@@ -46,6 +46,8 @@ Character Studio
 - edit worlds
 - debugging tools
 
+See `docs/PHASE_2_STUDIO.md`. CLI MVP: `character-os-studio` (list/show packs, inspect memories, scaffold characters).
+
 ---
 
 ## Phase 3

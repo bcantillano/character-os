@@ -19,6 +19,7 @@ dev = ["pytest>=8.0"]
 
 [project.scripts]
 character-os = "character_os.cli.chat:main"
+character-os-studio = "character_os.cli.studio:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
