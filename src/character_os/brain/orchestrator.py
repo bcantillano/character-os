@@ -3,7 +3,12 @@
 from __future__ import annotations
 
 from character_os.brain.conversation import ConversationStore
-from character_os.brain.emotion import apply_tick_decay, nudge
+from character_os.brain.emotion import (
+    apply_interpretation_drives,
+    apply_tick_decay,
+    nudge,
+    unstick_pegged_drives,
+)
 from character_os.brain.memory import MemoryStore
 from character_os.brain.relationship import apply_relationship_update
 from character_os.brain.speech_memory import format_speech_memory_context
@@ -36,7 +41,9 @@ class BrainOrchestrator:
 
         if persistence is not None:
             self.memory = persistence.load_memory_store()
-            drives = persistence.load_drives(character.emotional_drives)
+            drives = unstick_pegged_drives(
+                persistence.load_drives(character.emotional_drives)
+            )
             rel = persistence.load_relationship(
                 character.default_trust, character.default_familiarity
             )
@@ -70,11 +77,9 @@ class BrainOrchestrator:
         if interp.topics:
             self.conversation.state.current_topic = interp.topics[0]
 
-        self.state.emotional_drives = nudge(
+        self.state.emotional_drives = apply_interpretation_drives(
             self.state.emotional_drives,
-            curiosity=0.02,
-            excitement=0.03,
-            energy=-0.01,
+            interp,
         )
         trust_delta, familiarity_delta = apply_relationship_update(self.state, interp)
 

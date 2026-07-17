@@ -174,7 +174,7 @@ def _near_duplicate_text(a: str, b: str) -> bool:
     if a == b:
         return True
     shorter, longer = (a, b) if len(a) <= len(b) else (b, a)
-    if len(shorter) >= 20 and shorter in longer:
+    if len(shorter) >= 12 and shorter in longer:
         return True
     return False
 

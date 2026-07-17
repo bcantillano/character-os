@@ -10,6 +10,7 @@ from character_os.behavior.actions.speak import SpeakAction
 from character_os.behavior.actions.update_state import UpdateStateAction
 from character_os.behavior.actions.wait import WaitAction
 from character_os.behavior.executor import BehaviorExecutor
+from character_os.brain.emotion import format_relationship_stance
 from character_os.brain.orchestrator import BrainOrchestrator
 from character_os.brain.scheduler import DEFAULT_TICK_INTERVAL_SECONDS, BrainScheduler
 from character_os.core.types import IntentKind
@@ -169,6 +170,10 @@ class CharacterSession:
             "character_description": self.character.description,
             "personality_summary": personality,
             "emotional_state": drives,
+            "relationship_stance": format_relationship_stance(
+                state.user_trust,
+                state.user_familiarity,
+            ),
             "active_goals": goals or "(none)",
             "interpretation": interpretation or "(none)",
             "decision": decision or "(none)",

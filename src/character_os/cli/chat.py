@@ -108,8 +108,11 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"[tick] drives={drives}")
                 continue
             if line == "/state":
+                from character_os.brain.emotion import format_relationship_stance
+
                 s = session.brain.state
                 print(f"[state] trust={s.user_trust:.2f} familiarity={s.user_familiarity:.2f}")
+                print(f"[state] rapport={format_relationship_stance(s.user_trust, s.user_familiarity)}")
                 print(f"[state] drives={s.emotional_drives.as_dict()}")
                 print(f"[state] ticks={s.tick_count}")
                 print(f"[state] memories:\n{session.brain.memory_context()}")

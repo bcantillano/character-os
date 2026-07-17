@@ -30,6 +30,7 @@ def test_prompt_render():
             "character_description": "A pirate",
             "personality_summary": "bold",
             "emotional_state": "curious",
+            "relationship_stance": "Building trust (trust=0.45, familiarity=0.40).",
             "active_goals": "find map",
             "memory_context": "(none)",
             "relevant_knowledge": "Port Royal exists",
@@ -39,4 +40,7 @@ def test_prompt_render():
     )
     assert "Captain Redbeard" in text
     assert "{{character_name}}" not in text
+    assert "{{relationship_stance}}" not in text
     assert "Known facts about this person" in loader.load("response_generator")
+    assert "Relationship with this person" in loader.load("response_generator")
+    assert "Relationship with this person" in loader.load("internal_thoughts")

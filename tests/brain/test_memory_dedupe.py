@@ -60,6 +60,18 @@ def test_dedupe_collapses_name_and_preference_dupes():
     assert name_fact.importance == 0.7
 
 
+def test_dedupe_collapses_short_family_prefix():
+    store = MemoryStore()
+    store.add(MemoryFact(id="short", content="Byron has a family", importance=0.5))
+    store.add(
+        MemoryFact(id="long", content="Byron has a family on Medeira", importance=0.55)
+    )
+    removed = store.dedupe()
+    assert removed == ["short"]
+    assert len(store.all()) == 1
+    assert "Medeira" in store.all()[0].content
+
+
 def test_dedupe_collapses_contained_compass_facts():
     store = MemoryStore()
     store.add(MemoryFact(id="short", content="Byron has a special compass", importance=0.5))

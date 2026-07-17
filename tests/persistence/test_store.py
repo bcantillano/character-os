@@ -90,8 +90,9 @@ def test_session_persists_across_instances(tmp_path: Path):
         data_dir=tmp_path,
         enable_scheduler=False,
     )
-    before = s1.brain.state.emotional_drives.curiosity
     s1.send_message("Tell me about your treasure map.")
+    trust_after = s1.brain.state.user_trust
+    familiarity_after = s1.brain.state.user_familiarity
     s1.close()
 
     s2 = CharacterSession(
@@ -100,6 +101,9 @@ def test_session_persists_across_instances(tmp_path: Path):
         data_dir=tmp_path,
         enable_scheduler=False,
     )
-    assert s2.brain.state.emotional_drives.curiosity >= before
+    # Relationship + drives round-trip; curiosity may ease toward baseline between turns.
+    assert s2.brain.state.user_trust == trust_after
+    assert s2.brain.state.user_familiarity == familiarity_after
+    assert s2.brain.state.emotional_drives.curiosity > 0
     assert s2.brain.memory.all() or s2.brain.state.user_familiarity > 0
     s2.close()
