@@ -76,3 +76,23 @@ def test_tick_archives_stale_memories(tmp_path: Path):
     archived = session.persistence.memories.list_archived("captain-redbeard")
     assert any("Old gossip" in f.content for f in archived)
     session.close()
+
+
+def test_restore_archived_memory(tmp_path: Path):
+    db = Database(tmp_path / "test.sqlite3")
+    store = CharacterPersistence("captain-redbeard", db=db)
+    store.memories.add_fact("captain-redbeard", "Fading rumor", importance=0.0)
+    memory = store.load_memory_store()
+    assert len(memory.all()) == 0
+
+    archived = store.list_archived_memories()
+    assert len(archived) == 1
+    restored = store.restore_archived_memory(archived[0].id)
+    assert restored is not None
+    assert "Fading rumor" in restored.content
+    assert restored.importance >= 0.1
+    assert store.list_archived_memories() == []
+
+    reloaded = store.load_memory_store()
+    assert any("Fading rumor" in f.content for f in reloaded.all())
+    store.close()

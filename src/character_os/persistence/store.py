@@ -74,6 +74,13 @@ class CharacterPersistence:
         """Archive the given facts (already removed from the in-memory store)."""
         return self.memories.archive_facts(self.character_id, facts)
 
+    def list_archived_memories(self) -> list[MemoryFact]:
+        return self.memories.list_archived(self.character_id)
+
+    def restore_archived_memory(self, memory_id: str) -> MemoryFact | None:
+        """Restore one archived fact into active SQLite memory."""
+        return self.memories.restore_archived(self.character_id, memory_id)
+
     def load_drives(self, fallback: EmotionalDrives) -> EmotionalDrives:
         return self.emotions.load(self.character_id) or fallback
 

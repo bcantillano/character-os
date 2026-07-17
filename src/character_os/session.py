@@ -43,11 +43,16 @@ class CharacterSession:
         enable_scheduler: bool = False,
         data_dir: Path | None = None,
         persist: bool = True,
+        debug_stages: bool = False,
     ) -> None:
         self.character_id = character_id
         self.session_id = str(uuid4())
         self.bus = EventBus()
         self.registry = EventRegistry(self.bus)
+        if debug_stages:
+            from character_os.debug import attach_stage_logger
+
+            attach_stage_logger(self.bus)
         self.character = load_character(character_id)
         self.world = load_world(self.character.world)
         self.prompts = PromptLoader()

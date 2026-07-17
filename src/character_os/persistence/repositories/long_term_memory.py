@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from uuid import uuid4
 
 from character_os.brain.memory import MemoryFact
@@ -146,6 +147,41 @@ class LongTermMemoryRepository:
             (character_id,),
         ).fetchall()
         return [_row_to_fact(row) for row in rows]
+
+    def restore_archived(
+        self,
+        character_id: str,
+        memory_id: str,
+        *,
+        min_importance: float = 0.1,
+    ) -> MemoryFact | None:
+        """Move one archived fact back to active memory.
+
+        Bumps importance to at least ``min_importance`` so it is not
+        immediately re-archived by the forget threshold.
+        """
+        conn = self.db.connect()
+        row = conn.execute(
+            """
+            SELECT memory_id, content, importance, tags
+            FROM archived_memories
+            WHERE character_id = ? AND memory_id = ?
+            """,
+            (character_id, memory_id),
+        ).fetchone()
+        if row is None:
+            return None
+        fact = replace(_row_to_fact(row), importance=max(float(row["importance"]), min_importance))
+        self.upsert(character_id, fact)
+        conn.execute(
+            """
+            DELETE FROM archived_memories
+            WHERE character_id = ? AND memory_id = ?
+            """,
+            (character_id, memory_id),
+        )
+        conn.commit()
+        return fact
 
 
 def _row_to_fact(row) -> MemoryFact:
