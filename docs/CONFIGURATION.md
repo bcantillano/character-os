@@ -67,6 +67,8 @@ Characters **inherit world knowledge** from their referenced world pack. The `kn
 
 Optional. Separate from `personality.voice` (dialogue writing style). Used when the CLI enables TTS (`--tts` / `--tts-play`).
 
+With `--tts-play`, speech is synthesized in sentence-sized chunks so playback can start after the first chunk (lower time-to-first-audio). `--tts` without play still synthesizes the full reply as one file.
+
 | Field | Default | Description |
 |-------|---------|-------------|
 | `provider` | `stub` | `stub` or `openai` |

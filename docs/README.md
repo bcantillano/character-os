@@ -38,7 +38,7 @@ No computer vision.
 
 No movement.
 
-Voice output (TTS) is Phase 1b and optional via `--tts` / `--tts-play`. Speech recognition remains Phase 3.
+Voice output (TTS) is Phase 1b and optional via `--tts` / `--tts-play`. With `--tts-play`, audio starts after the first sentence chunk synthesizes (overlapping later chunks). Speech recognition remains Phase 3.
 
 The goal is to create a believable character through text conversation alone (Phase 1), then layer spoken delivery without changing the brain pipeline.
 

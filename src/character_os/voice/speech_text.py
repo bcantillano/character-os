@@ -28,3 +28,42 @@ def normalize_for_speech(text: str) -> str:
     out = re.sub(r"[ \t]{2,}", " ", out)
     out = re.sub(r"\s+([,.;!?])", r"\1", out)
     return out.strip()
+
+
+# Sentence end: . ! ? … (optional closing quote) then whitespace or end.
+_SENTENCE_END = re.compile(r'(?<=[.!?…])["\']?\s+')
+_MIN_CHUNK_CHARS = 28
+
+
+def split_speak_chunks(text: str) -> list[str]:
+    """Split spoken text into sentence-sized chunks for early playback.
+
+    Short trailing fragments are merged into the previous chunk so TTS does not
+    get tiny one-word clips.
+    """
+    cleaned = re.sub(r"\s+", " ", (text or "").strip())
+    if not cleaned:
+        return []
+
+    parts = [p.strip() for p in _SENTENCE_END.split(cleaned) if p.strip()]
+    if not parts:
+        return [cleaned]
+    if len(parts) == 1:
+        return parts
+
+    chunks: list[str] = []
+    buf = parts[0]
+    for part in parts[1:]:
+        # Merge short fragments into the current buffer.
+        if len(buf) < _MIN_CHUNK_CHARS or len(part) < _MIN_CHUNK_CHARS:
+            buf = f"{buf} {part}".strip()
+        else:
+            chunks.append(buf)
+            buf = part
+    if buf:
+        # If the last piece is tiny, fold into previous when possible.
+        if chunks and len(buf) < _MIN_CHUNK_CHARS:
+            chunks[-1] = f"{chunks[-1]} {buf}".strip()
+        else:
+            chunks.append(buf)
+    return chunks or [cleaned]

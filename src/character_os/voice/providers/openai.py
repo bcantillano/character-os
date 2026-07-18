@@ -1,4 +1,8 @@
-"""OpenAI TTS. Import openai only here — never from brain modules."""
+"""OpenAI TTS. Import openai only here — never from brain modules.
+
+HTTP streaming (`with_streaming_response`) downloads into a file; early playback
+latency is handled by sentence-chunked synthesize+queue in SpeakVoiceAction.
+"""
 
 from __future__ import annotations
 

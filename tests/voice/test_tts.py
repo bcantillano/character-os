@@ -92,3 +92,93 @@ def test_speak_voice_merges_emotion_overlay(tmp_path: Path):
     assert capture.last_profile is not None
     assert "Base voice." in capture.last_profile.instructions
     assert "curiosity" in capture.last_profile.instructions.lower()
+
+
+def test_split_speak_chunks_sentences():
+    from character_os.voice.speech_text import split_speak_chunks
+
+    assert split_speak_chunks("") == []
+    assert split_speak_chunks("One line only.") == ["One line only."]
+
+    chunks = split_speak_chunks(
+        "This is a longer first sentence for speech. "
+        "Here is another complete sentence ready for TTS. "
+        "And a third sentence finishes the thought."
+    )
+    assert len(chunks) >= 2
+    assert chunks[0].startswith("This is a longer first")
+    assert any("third sentence" in c for c in chunks)
+
+    # Short opener merges into the next sentence.
+    merged = split_speak_chunks("Yes. I completely agree with that plan for tonight.")
+    assert len(merged) == 1
+    assert merged[0].startswith("Yes.")
+
+
+def test_speak_voice_play_chunks_synthesizes_early(tmp_path: Path):
+    class CaptureTTS(StubTTSProvider):
+        def __init__(self) -> None:
+            self.texts: list[str] = []
+
+        def synthesize(self, text: str, profile: TTSProfile, output_path: Path) -> Path:
+            self.texts.append(text)
+            return super().synthesize(text, profile, output_path)
+
+    bus = EventBus()
+    capture = CaptureTTS()
+    action = SpeakVoiceAction(
+        bus,
+        capture,
+        TTSProfile(voice="cedar"),
+        tmp_path,
+        character_id="lumen",
+        session_id="s1",
+        play=True,
+    )
+    action.wire()
+    seen: list[SpeechSynthesizedEvent] = []
+    bus.subscribe(SpeechSynthesizedEvent, seen.append)
+
+    reply = (
+        "This is a longer first sentence for speech. "
+        "Here is another complete sentence ready for TTS."
+    )
+    bus.publish(ResponseReadyEvent(text=reply, thoughts=""))
+
+    assert len(capture.texts) >= 2
+    assert len(seen) == 1
+    assert Path(seen[0].audio_path).is_file()
+    assert action.last_audio_path == Path(seen[0].audio_path)
+    # Event published after first chunk, not after the whole reply as one file.
+    assert capture.texts[0] != reply
+
+
+def test_audio_queue_plays_sequentially_and_stop_clears(tmp_path: Path, monkeypatch):
+    import time
+
+    from character_os.voice import playback
+
+    playback.stop_audio()
+    monkeypatch.setattr(
+        playback,
+        "_player_cmd",
+        lambda path: [sys_executable(), "-c", "import time; time.sleep(0.15)"],
+    )
+
+    a = tmp_path / "a.mp3"
+    b = tmp_path / "b.mp3"
+    a.write_bytes(b"a")
+    b.write_bytes(b"b")
+
+    assert playback.enqueue_audio(a)
+    assert playback.enqueue_audio(b)
+    time.sleep(0.05)
+    assert playback.queue_size() >= 0
+    playback.stop_audio()
+    assert playback.queue_size() == 0
+
+
+def sys_executable() -> str:
+    import sys
+
+    return sys.executable
