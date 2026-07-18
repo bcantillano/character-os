@@ -31,6 +31,10 @@ def apply_character_edits(
     world_id: str | None = None,
     add_traits: list[str] | None = None,
     remove_traits: list[str] | None = None,
+    add_fears: list[str] | None = None,
+    remove_fears: list[str] | None = None,
+    add_preferences: list[str] | None = None,
+    remove_preferences: list[str] | None = None,
     drives: dict[str, float] | None = None,
     voice_tone: str | None = None,
     add_quirks: list[str] | None = None,
@@ -39,6 +43,9 @@ def apply_character_edits(
     default_familiarity: float | None = None,
     add_goal: tuple[str, str] | None = None,
     remove_goal_id: str | None = None,
+    goal_priority: dict[str, str] | None = None,
+    goal_status: dict[str, str] | None = None,
+    goal_description: dict[str, str] | None = None,
 ) -> dict:
     """Mutate a character.yaml mapping in place and return it."""
     if name is not None:
@@ -52,16 +59,22 @@ def apply_character_edits(
     if not isinstance(personality, dict):
         raise ValueError("personality must be a mapping")
 
-    if add_traits or remove_traits:
-        traits = list(personality.get("traits") or [])
-        if add_traits:
-            for trait in add_traits:
-                if trait not in traits:
-                    traits.append(trait)
-        if remove_traits:
-            remove = set(remove_traits)
-            traits = [t for t in traits if t not in remove]
-        personality["traits"] = traits
+    def _edit_list(key: str, add: list[str] | None, remove: list[str] | None) -> None:
+        if not add and not remove:
+            return
+        items = list(personality.get(key) or [])
+        if add:
+            for item in add:
+                if item not in items:
+                    items.append(item)
+        if remove:
+            drop = set(remove)
+            items = [x for x in items if x not in drop]
+        personality[key] = items
+
+    _edit_list("traits", add_traits, remove_traits)
+    _edit_list("fears", add_fears, remove_fears)
+    _edit_list("preferences", add_preferences, remove_preferences)
 
     voice = personality.setdefault("voice", {})
     if not isinstance(voice, dict):
@@ -132,6 +145,28 @@ def apply_character_edits(
         if len(new_goals) == len(goals):
             raise ValueError(f"Goal not found: {remove_goal_id}")
         data["goals"] = new_goals
+
+    if goal_priority or goal_status or goal_description:
+        goals = data.get("goals") or []
+        if not isinstance(goals, list):
+            raise ValueError("goals must be a list")
+        by_id = {g.get("id"): g for g in goals if isinstance(g, dict) and g.get("id")}
+        for gid, priority in (goal_priority or {}).items():
+            if gid not in by_id:
+                raise ValueError(f"Goal not found: {gid}")
+            if priority not in {"high", "medium", "low"}:
+                raise ValueError(f"Invalid goal priority: {priority}")
+            by_id[gid]["priority"] = priority
+        for gid, status in (goal_status or {}).items():
+            if gid not in by_id:
+                raise ValueError(f"Goal not found: {gid}")
+            if status not in {"active", "paused", "completed", "failed"}:
+                raise ValueError(f"Invalid goal status: {status}")
+            by_id[gid]["status"] = status
+        for gid, desc in (goal_description or {}).items():
+            if gid not in by_id:
+                raise ValueError(f"Goal not found: {gid}")
+            by_id[gid]["description"] = desc
 
     return data
 

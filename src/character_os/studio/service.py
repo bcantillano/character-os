@@ -15,12 +15,20 @@ from character_os.loader.paths import (
     find_repo_root,
 )
 from character_os.persistence import CharacterPersistence
+from character_os.studio.debug_trace import StageTraceResult, run_stage_trace
 from character_os.studio.edit import (
     apply_character_edits,
     read_character_yaml,
     save_character_edits,
 )
 from character_os.studio.validate import ValidationReport, validate_character_pack, validate_world_pack
+from character_os.studio.world_edit import (
+    add_knowledge_entry,
+    apply_world_edits,
+    create_world_pack,
+    read_world_yaml,
+    save_world_edits,
+)
 
 
 @dataclass(frozen=True)
@@ -37,6 +45,8 @@ class CharacterDetail:
     world: str
     description: str
     traits: list[str]
+    fears: list[str]
+    preferences: list[str]
     goals: list[dict[str, str]]
     drives: dict[str, float]
     trust_default: float
@@ -112,6 +122,8 @@ class StudioService:
             world=character.world,
             description=character.description.strip(),
             traits=list(character.personality.traits),
+            fears=list(character.personality.fears),
+            preferences=list(character.personality.preferences),
             goals=[
                 {
                     "id": g.id,
@@ -135,6 +147,9 @@ class StudioService:
             "id": world.id,
             "name": world.name,
             "description": world.description.strip(),
+            "era": world.era,
+            "tone": world.tone,
+            "rules": list(world.rules),
             "knowledge_count": len(world.knowledge),
             "knowledge_ids": [e.id for e in world.knowledge],
         }
@@ -259,6 +274,10 @@ class StudioService:
         world_id: str | None = None,
         add_traits: list[str] | None = None,
         remove_traits: list[str] | None = None,
+        add_fears: list[str] | None = None,
+        remove_fears: list[str] | None = None,
+        add_preferences: list[str] | None = None,
+        remove_preferences: list[str] | None = None,
         drives: dict[str, float] | None = None,
         voice_tone: str | None = None,
         add_quirks: list[str] | None = None,
@@ -267,6 +286,9 @@ class StudioService:
         default_familiarity: float | None = None,
         add_goal: tuple[str, str] | None = None,
         remove_goal_id: str | None = None,
+        goal_priority: dict[str, str] | None = None,
+        goal_status: dict[str, str] | None = None,
+        goal_description: dict[str, str] | None = None,
     ) -> Path:
         """Apply in-place edits to character.yaml; validate or roll back."""
         yaml_path = self.characters_dir / character_id / "character.yaml"
@@ -278,6 +300,10 @@ class StudioService:
             world_id=world_id,
             add_traits=add_traits,
             remove_traits=remove_traits,
+            add_fears=add_fears,
+            remove_fears=remove_fears,
+            add_preferences=add_preferences,
+            remove_preferences=remove_preferences,
             drives=drives,
             voice_tone=voice_tone,
             add_quirks=add_quirks,
@@ -286,10 +312,94 @@ class StudioService:
             default_familiarity=default_familiarity,
             add_goal=add_goal,
             remove_goal_id=remove_goal_id,
+            goal_priority=goal_priority,
+            goal_status=goal_status,
+            goal_description=goal_description,
         )
         return save_character_edits(
             character_id,
             data,
             characters_dir=self.characters_dir,
             worlds_dir=self.worlds_dir,
+        )
+
+    def create_world(
+        self,
+        world_id: str,
+        *,
+        name: str,
+        description: str | None = None,
+        era: str = "",
+        tone: str = "",
+        force: bool = False,
+    ) -> Path:
+        return create_world_pack(
+            world_id,
+            worlds_dir=self.worlds_dir,
+            name=name,
+            description=description,
+            era=era,
+            tone=tone,
+            force=force,
+        )
+
+    def edit_world(
+        self,
+        world_id: str,
+        *,
+        name: str | None = None,
+        description: str | None = None,
+        era: str | None = None,
+        tone: str | None = None,
+        add_rules: list[str] | None = None,
+        remove_rules: list[str] | None = None,
+    ) -> Path:
+        yaml_path = self.worlds_dir / world_id / "world.yaml"
+        data = read_world_yaml(yaml_path)
+        apply_world_edits(
+            data,
+            name=name,
+            description=description,
+            era=era,
+            tone=tone,
+            add_rules=add_rules,
+            remove_rules=remove_rules,
+        )
+        return save_world_edits(world_id, data, worlds_dir=self.worlds_dir)
+
+    def add_world_knowledge(
+        self,
+        world_id: str,
+        *,
+        entry_id: str,
+        summary: str,
+        topic: str = "general",
+        details: str = "",
+        knowledge_file: str = "knowledge/general.yaml",
+    ) -> Path:
+        return add_knowledge_entry(
+            world_id,
+            worlds_dir=self.worlds_dir,
+            entry_id=entry_id,
+            summary=summary,
+            topic=topic,
+            details=details,
+            knowledge_file=knowledge_file,
+        )
+
+    def stage_trace(
+        self,
+        character_id: str,
+        message: str,
+        *,
+        provider_name: str = "stub",
+        persist: bool = False,
+    ) -> StageTraceResult:
+        # Ensure pack exists in this Studio root.
+        self.show_character(character_id)
+        return run_stage_trace(
+            character_id,
+            message,
+            provider_name=provider_name,
+            persist=persist,
         )

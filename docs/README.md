@@ -114,7 +114,12 @@ character-os-studio show character lumen
 character-os-studio validate character lumen
 character-os-studio memories lumen
 character-os-studio create-character my-bot --name "My Bot" --world everyday-present
+character-os-studio create-world my-world --name "My World"
 character-os-studio set character my-bot --add-trait calm --drive curiosity=0.7
+character-os-studio set world my-world --add-rule "Stay consistent with lore"
+character-os-studio add-knowledge my-world --id harbor --summary "Harbor notes"
+character-os-studio trace lumen "Hello." --provider stub
+character-os-studio serve
 ```
 
 See `docs/PHASE_2_STUDIO.md`.

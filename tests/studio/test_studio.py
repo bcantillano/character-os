@@ -144,3 +144,88 @@ def test_edit_character_rolls_back_invalid_drive(tmp_path: Path):
         studio.edit_character("safe-bot", drives={"curiosity": 9.0})
     after = (root / "characters" / "safe-bot" / "character.yaml").read_text(encoding="utf-8")
     assert after == before
+
+
+def test_create_and_edit_world(tmp_path: Path):
+    root = tmp_path
+    (root / "characters").mkdir()
+    (root / "worlds").mkdir()
+    studio = StudioService(root=root, data_dir=root / "data")
+    path = studio.create_world(
+        "probe-world",
+        name="Probe World",
+        description="A test world.",
+        era="now",
+        tone="calm",
+    )
+    assert (path / "world.yaml").is_file()
+    assert (path / "knowledge" / "general.yaml").is_file()
+    studio.edit_world(
+        "probe-world",
+        add_rules=["Keep secrets secret."],
+        tone="curious",
+    )
+    world = studio.show_world("probe-world")
+    assert world["tone"] == "curious"
+    assert "Keep secrets secret." in world["rules"]
+    assert studio.validate_world("probe-world").ok
+    assert (path / "world.yaml.bak").is_file()
+
+    studio.add_world_knowledge(
+        "probe-world",
+        entry_id="probe_fact",
+        summary="A probe fact.",
+        topic="testing",
+    )
+    world = studio.show_world("probe-world")
+    assert "probe_fact" in world["knowledge_ids"]
+
+
+def test_edit_character_fears_preferences_goals(tmp_path: Path):
+    root = tmp_path
+    (root / "characters").mkdir()
+    (root / "worlds" / "everyday-present").mkdir(parents=True)
+    (root / "worlds" / "everyday-present" / "world.yaml").write_text(
+        "id: everyday-present\nname: Everyday Present\ndescription: test\n",
+        encoding="utf-8",
+    )
+    studio = StudioService(root=root, data_dir=root / "data")
+    studio.create_character("rich-bot", name="Rich Bot", world_id="everyday-present")
+    studio.edit_character(
+        "rich-bot",
+        add_fears=["silence"],
+        add_preferences=["tea"],
+        add_goal=("scout", "Scout carefully"),
+        goal_priority={"scout": "high"},
+        goal_status={"scout": "paused"},
+        goal_description={"scout": "Scout the perimeter"},
+    )
+    detail = studio.show_character("rich-bot")
+    assert "silence" in detail.fears
+    assert "tea" in detail.preferences
+    scout = next(g for g in detail.goals if g["id"] == "scout")
+    assert scout["priority"] == "high"
+    assert scout["status"] == "paused"
+    assert scout["description"] == "Scout the perimeter"
+
+
+def test_stage_trace_stub_lumen():
+    studio = StudioService()
+    result = studio.stage_trace("lumen", "Hello there.", provider_name="stub", persist=False)
+    assert result.reply
+    assert result.stages
+    labels = [s["stage"] for s in result.stages]
+    assert "Observe" in labels
+    assert labels.index("Observe") < labels.index("Interpret")
+    assert any(label.startswith("Act/") or label == "Decide" for label in labels)
+
+
+def test_web_api_list_and_trace():
+    from character_os.studio.web import make_handler
+
+    studio = StudioService()
+    handler_cls = make_handler(studio)
+    # Exercise handler construction + service paths used by the UI.
+    assert studio.list_characters()
+    assert studio.list_worlds()
+    assert handler_cls is not None
