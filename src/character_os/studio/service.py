@@ -15,6 +15,12 @@ from character_os.loader.paths import (
     find_repo_root,
 )
 from character_os.persistence import CharacterPersistence
+from character_os.studio.edit import (
+    apply_character_edits,
+    read_character_yaml,
+    save_character_edits,
+)
+from character_os.studio.validate import ValidationReport, validate_character_pack, validate_world_pack
 
 
 @dataclass(frozen=True)
@@ -233,3 +239,57 @@ class StudioService:
         with yaml_path.open("w", encoding="utf-8") as f:
             yaml.safe_dump(payload, f, sort_keys=False, allow_unicode=True)
         return pack_dir
+
+    def validate_character(self, character_id: str) -> ValidationReport:
+        return validate_character_pack(
+            character_id,
+            characters_dir=self.characters_dir,
+            worlds_dir=self.worlds_dir,
+        )
+
+    def validate_world(self, world_id: str) -> ValidationReport:
+        return validate_world_pack(world_id, worlds_dir=self.worlds_dir)
+
+    def edit_character(
+        self,
+        character_id: str,
+        *,
+        name: str | None = None,
+        description: str | None = None,
+        world_id: str | None = None,
+        add_traits: list[str] | None = None,
+        remove_traits: list[str] | None = None,
+        drives: dict[str, float] | None = None,
+        voice_tone: str | None = None,
+        add_quirks: list[str] | None = None,
+        remove_quirks: list[str] | None = None,
+        default_trust: float | None = None,
+        default_familiarity: float | None = None,
+        add_goal: tuple[str, str] | None = None,
+        remove_goal_id: str | None = None,
+    ) -> Path:
+        """Apply in-place edits to character.yaml; validate or roll back."""
+        yaml_path = self.characters_dir / character_id / "character.yaml"
+        data = read_character_yaml(yaml_path)
+        apply_character_edits(
+            data,
+            name=name,
+            description=description,
+            world_id=world_id,
+            add_traits=add_traits,
+            remove_traits=remove_traits,
+            drives=drives,
+            voice_tone=voice_tone,
+            add_quirks=add_quirks,
+            remove_quirks=remove_quirks,
+            default_trust=default_trust,
+            default_familiarity=default_familiarity,
+            add_goal=add_goal,
+            remove_goal_id=remove_goal_id,
+        )
+        return save_character_edits(
+            character_id,
+            data,
+            characters_dir=self.characters_dir,
+            worlds_dir=self.worlds_dir,
+        )

@@ -111,8 +111,10 @@ Useful flags: `--show-thoughts`, `--debug-stages`, `--enable-ticks`, `--once "he
 ```bash
 character-os-studio list characters
 character-os-studio show character lumen
+character-os-studio validate character lumen
 character-os-studio memories lumen
 character-os-studio create-character my-bot --name "My Bot" --world everyday-present
+character-os-studio set character my-bot --add-trait calm --drive curiosity=0.7
 ```
 
 See `docs/PHASE_2_STUDIO.md`.

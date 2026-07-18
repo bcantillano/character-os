@@ -73,3 +73,74 @@ def test_inspect_runtime_empty_db(tmp_path: Path):
     assert snap.character_id == "lumen"
     assert isinstance(snap.active_memories, list)
     assert isinstance(snap.drives, dict)
+
+
+def test_validate_existing_packs():
+    studio = StudioService()
+    assert studio.validate_character("lumen").ok
+    assert studio.validate_character("captain-redbeard").ok
+    assert studio.validate_world("everyday-present").ok
+    assert studio.validate_world("caribbean-1790").ok
+
+
+def test_validate_rejects_bad_character(tmp_path: Path):
+    root = tmp_path
+    (root / "characters" / "broken").mkdir(parents=True)
+    (root / "worlds" / "everyday-present").mkdir(parents=True)
+    (root / "worlds" / "everyday-present" / "world.yaml").write_text(
+        "id: everyday-present\nname: Everyday Present\ndescription: test\n",
+        encoding="utf-8",
+    )
+    (root / "characters" / "broken" / "character.yaml").write_text(
+        "id: broken\nname: Broken\n",
+        encoding="utf-8",
+    )
+    studio = StudioService(root=root, data_dir=root / "data")
+    report = studio.validate_character("broken")
+    assert not report.ok
+    assert any("world" in e.lower() or "missing" in e.lower() for e in report.errors)
+
+
+def test_edit_character_trait_and_drive(tmp_path: Path):
+    root = tmp_path
+    (root / "characters").mkdir()
+    (root / "worlds" / "everyday-present").mkdir(parents=True)
+    (root / "worlds" / "everyday-present" / "world.yaml").write_text(
+        "id: everyday-present\nname: Everyday Present\ndescription: test\n",
+        encoding="utf-8",
+    )
+    studio = StudioService(root=root, data_dir=root / "data")
+    studio.create_character(
+        "edit-bot",
+        name="Edit Bot",
+        world_id="everyday-present",
+    )
+    studio.edit_character(
+        "edit-bot",
+        add_traits=["witty"],
+        drives={"curiosity": 0.8},
+        add_goal=("scout", "Scout the room carefully"),
+    )
+    detail = studio.show_character("edit-bot")
+    assert "witty" in detail.traits
+    assert detail.drives["curiosity"] == 0.8
+    assert any(g["id"] == "scout" for g in detail.goals)
+    assert studio.validate_character("edit-bot").ok
+    assert (root / "characters" / "edit-bot" / "character.yaml.bak").is_file()
+
+
+def test_edit_character_rolls_back_invalid_drive(tmp_path: Path):
+    root = tmp_path
+    (root / "characters").mkdir()
+    (root / "worlds" / "everyday-present").mkdir(parents=True)
+    (root / "worlds" / "everyday-present" / "world.yaml").write_text(
+        "id: everyday-present\nname: Everyday Present\ndescription: test\n",
+        encoding="utf-8",
+    )
+    studio = StudioService(root=root, data_dir=root / "data")
+    studio.create_character("safe-bot", name="Safe Bot", world_id="everyday-present")
+    before = (root / "characters" / "safe-bot" / "character.yaml").read_text(encoding="utf-8")
+    with pytest.raises(ValueError):
+        studio.edit_character("safe-bot", drives={"curiosity": 9.0})
+    after = (root / "characters" / "safe-bot" / "character.yaml").read_text(encoding="utf-8")
+    assert after == before
