@@ -93,6 +93,8 @@ def test_prompt_render():
     assert "Known facts about this person" in loader.load("response_generator")
     assert "Relationship with this person" in loader.load("response_generator")
     assert "Relationship with this person" in loader.load("internal_thoughts")
+    assert "User just said" in loader.load("internal_thoughts")
+    assert "Recent dialogue" in loader.load("internal_thoughts")
 
 
 def test_lumen_prompt_override_loads():
@@ -105,3 +107,15 @@ def test_lumen_prompt_override_loads():
     assert "default: no question" in text.lower()
     assert "that sounds like" in text.lower()
     assert "support" in text.lower()
+    assert "current turn wins" in text.lower()
+    assert "i observe the patterns" in text.lower()
+    thoughts = loader.load(
+        "internal_thoughts",
+        override_path=character.prompts["internal_thoughts"],
+    )
+    assert "user just said" in thoughts.lower()
+    assert "recent dialogue" in thoughts.lower()
+    assert "flatbread" in thoughts.lower()
+    goal = next(g for g in character.goals if g.id == "understand_people")
+    assert "patterns" not in goal.description.lower()
+    assert "what they say now" in goal.description.lower()

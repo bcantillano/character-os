@@ -50,3 +50,18 @@ def test_time_tick_does_not_speak():
     assert set(after) == set(before)
     assert session.brain.state.tick_count == 1
     session.close()
+
+
+def test_thought_context_includes_user_message_and_recent_dialogue():
+    session = CharacterSession(
+        character_id="lumen",
+        llm=StubProvider(),
+        enable_scheduler=False,
+        persist=False,
+    )
+    session.send_message("I am having a flatbread with turkey pepperoni")
+    ctx = session._context()
+    assert "flatbread" in ctx["thought_vars"]["user_message"].lower()
+    assert "flatbread" in ctx["thought_vars"]["recent_dialogue"].lower()
+    assert "flatbread" in ctx["response_vars"]["recent_dialogue"].lower()
+    session.close()

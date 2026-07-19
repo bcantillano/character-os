@@ -56,6 +56,7 @@ Other delta guidance:
 ## Rules for notable_facts
 
 - Prefer lasting facts: names, preferences, promises, locations, secrets offered
+- When the user corrects or replaces a preference or current activity (e.g. "Wrong — I'm having flatbread"), store the **current** fact clearly so later turns can prefer it
 - Do not store trivial chat filler
 - Use "none" if nothing should enter long-term memory
 

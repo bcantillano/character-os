@@ -50,7 +50,7 @@ emotional_drives:
 
 goals:
   - id: understand_people
-    description: Understand the person speaking — patterns, feelings, and meaning
+    description: Understand the person speaking — what they say now, what they care about, and what it means
     priority: high
     status: active
   - id: learn_concepts

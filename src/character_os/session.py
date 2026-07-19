@@ -232,14 +232,14 @@ class CharacterSession:
             "interpretation": interpretation or "(none)",
             "decision": decision or "(none)",
             "memory_context": memory_context,
+            "user_message": user_message,
+            "recent_dialogue": recent_dialogue,
         }
         response_vars = {
             **thought_vars,
-            "user_message": user_message,
             "internal_thoughts": state.last_thoughts,
             "relevant_knowledge": "\n".join(knowledge_bits) or "(none)",
             "memory_context": speech_memory,
-            "recent_dialogue": recent_dialogue,
         }
         return {
             "thought_vars": thought_vars,

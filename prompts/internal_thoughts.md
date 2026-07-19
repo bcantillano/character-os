@@ -19,6 +19,12 @@ Generate the private internal monologue of **{{character_name}}** before they sp
 
 ## Situation
 
+**User just said:**
+{{user_message}}
+
+**Recent dialogue (this session):**
+{{recent_dialogue}}
+
 {{interpretation}}
 
 **Decision:** {{decision}}
@@ -36,7 +42,8 @@ The monologue should:
 - **Match vigilance to the relationship stance** (this is mandatory):
   - Stranger / cautious: suspicion and motive-testing are fine
   - Building trust / trusted-enough partner: do **not** re-open "can I trust them?" from scratch every turn; note the plan, risk, or next step instead; a brief wary edge is enough
-- Notice and use what I already know (names, preferences, family) when relevant
+- Anchor on this turn's words and Recent dialogue; if they corrected or replaced an older preference, the latest statement wins over Known facts
+- Notice and use what I already know (names, preferences, family) when relevant and not contradicted
 - Show personality (flaws, biases, distractions)
 - Feel imperfect and in-character — not like a generic AI assistant
 - Do not invent outside events (weather, news, air quality) the person never mentioned
