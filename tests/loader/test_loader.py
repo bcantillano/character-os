@@ -106,16 +106,19 @@ def test_lumen_prompt_override_loads():
     )
     assert "default: no question" in text.lower()
     assert "that sounds like" in text.lower()
-    assert "support" in text.lower()
+    assert "how about" in text.lower()
     assert "current turn wins" in text.lower()
-    assert "i observe the patterns" in text.lower()
+    assert "food lists" in text.lower()
+    assert "dark knight" in text.lower()
+    assert "### examples" in text.lower()
     thoughts = loader.load(
         "internal_thoughts",
         override_path=character.prompts["internal_thoughts"],
     )
     assert "user just said" in thoughts.lower()
     assert "recent dialogue" in thoughts.lower()
-    assert "flatbread" in thoughts.lower()
+    assert "i wonder" in thoughts.lower()
+    assert "protein" in thoughts.lower() or "nutrition" in thoughts.lower()
     goal = next(g for g in character.goals if g.id == "understand_people")
     assert "patterns" not in goal.description.lower()
     assert "what they say now" in goal.description.lower()
