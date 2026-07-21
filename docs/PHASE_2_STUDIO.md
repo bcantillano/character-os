@@ -25,6 +25,7 @@ character-os-studio show world caribbean-1790
 character-os-studio validate character lumen
 character-os-studio validate world caribbean-1790
 character-os-studio memories lumen
+character-os-studio reset-memories lumen --confirm
 character-os-studio create-character my-bot --name "My Bot" --world everyday-present
 character-os-studio create-world my-world --name "My World" --era now --tone calm
 character-os-studio set character my-bot --add-trait calm --drive curiosity=0.7
@@ -67,11 +68,18 @@ Add `--json` for machine-readable output. `validate` exits `2` on failure.
 3. **Validate via loader** — packs must round-trip through `load_character` / `load_world`.
 4. **Scaffold + targeted set** — create minimal packs, then patch common fields; deep polish can still be hand-edited.
 
+### `reset-memories` notes
+
+- Clears active + archived SQLite memories for one character
+- Restores emotional drives and relationship trust/familiarity to pack defaults
+- Requires `--confirm` (irreversible for that character's rows)
+- Same wipe path as chat `/reset confirm` (Studio does not clear an active chat session)
+
 ## Phase 2 status
 
 Done for this phase slice:
 
 - Character create / validate / set (including fears, preferences, goal fields)
 - World create / validate / set / add-knowledge
-- Memory inspect
+- Memory inspect + `reset-memories`
 - Stage-debug `trace` + optional `serve` web UI

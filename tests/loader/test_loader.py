@@ -67,6 +67,8 @@ def test_load_everyday_present_world():
     assert "companion_role" in ids
     assert "emotions_as_signals" in ids
     assert "household_presence" in ids
+    assert "quiet_corner" in ids
+    assert "kitchen_table" in ids
 
 
 def test_prompt_render():

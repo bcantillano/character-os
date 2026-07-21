@@ -141,7 +141,12 @@ class BrainOrchestrator:
         return
 
     def _remember_notable_facts(self, facts: list[str], raw_message: str) -> None:
-        from character_os.brain.memory import MemoryFact, canonicalize_fact_content
+        from character_os.brain.memory import (
+            MemoryFact,
+            canonicalize_fact_content,
+            merge_preference_content,
+            preference_domain,
+        )
 
         for fact in facts:
             if not fact or fact.lower() in {"none", "none yet", "n/a"}:
@@ -151,8 +156,9 @@ class BrainOrchestrator:
             existing = self.memory.find_similar(content)
             if existing is not None:
                 existing.importance = min(1.0, existing.importance + 0.05)
-                # Upgrade short / non-canonical wording when a richer form arrives.
-                if len(content) > len(existing.content):
+                if preference_domain(content) and preference_domain(existing.content):
+                    existing.content = merge_preference_content(existing.content, content)
+                elif len(content) > len(existing.content):
                     existing.content = content
                 self.memory.mark_dirty(existing.id)
                 continue
@@ -189,3 +195,29 @@ class BrainOrchestrator:
         for fact in facts:
             lines.append(f"- {fact.content}")
         return "\n".join(lines)
+
+    def reset(self) -> dict[str, int]:
+        """Clear session + durable state back to character-pack defaults.
+
+        Returns counts from persistence wipe (zeros when ephemeral).
+        """
+        stats = {"memories_cleared": 0, "archived_cleared": 0}
+        if self.persistence is not None:
+            stats = self.persistence.reset_character(
+                self.character.emotional_drives,
+                trust=self.character.default_trust,
+                familiarity=self.character.default_familiarity,
+            )
+            self.memory = self.persistence.load_memory_store()
+        else:
+            self.memory = MemoryStore()
+
+        self.conversation.reset()
+        self.state = CharacterState(
+            character_id=self.character.id,
+            emotional_drives=self.character.emotional_drives,
+            goals=list(self.character.goals),
+            user_trust=self.character.default_trust,
+            user_familiarity=self.character.default_familiarity,
+        )
+        return stats

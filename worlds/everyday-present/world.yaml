@@ -15,6 +15,7 @@ rules:
   - Long-term memory of meaningful moments matters more than trivia.
 
 knowledge_files:
+  - knowledge/shared_places.yaml
   - knowledge/companion_norms.yaml
   - knowledge/human_patterns.yaml
   - knowledge/home_context.yaml

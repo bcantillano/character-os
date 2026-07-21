@@ -11,6 +11,43 @@ _NAME_RE = re.compile(
     re.IGNORECASE,
 )
 
+_PREF_RE = re.compile(
+    r"^(?:the user )?(?:likes|prefers|love[sd]?|enjoy[sd]?)\s+(.+)$",
+    re.IGNORECASE,
+)
+
+# Taste / cuisine cues that should share one preference fact instead of splitting.
+_FOOD_PREF_MARKERS = frozenset(
+    {
+        "spicy",
+        "bold",
+        "mild",
+        "savory",
+        "sweet",
+        "sour",
+        "bitter",
+        "umami",
+        "hot",
+        "food",
+        "foods",
+        "meal",
+        "meals",
+        "dish",
+        "dishes",
+        "cuisine",
+        "flavor",
+        "flavour",
+        "flavors",
+        "flavours",
+        "taste",
+        "tastes",
+        "eating",
+        "protein",
+        "healthy",
+        "health",
+    }
+)
+
 # Facts at or below this importance are archived out of active long-term memory.
 FORGET_IMPORTANCE_THRESHOLD = 0.02
 
@@ -138,9 +175,15 @@ def canonicalize_fact_content(fact: str) -> str:
             return rest
         if rest.lower().startswith("prefers "):
             return f"The user {rest}"
+        if rest.lower().startswith("likes "):
+            return f"The user {rest}"
         return f"The user prefers {rest}"
     if re.match(r"^prefers\s+", lowered):
         return f"The user {text}"
+    if re.match(r"^likes?\s+", lowered):
+        verb = "likes" if lowered.startswith("like ") or lowered.startswith("likes ") else "likes"
+        rest = re.sub(r"^likes?\s+", "", text, count=1, flags=re.IGNORECASE).strip()
+        return f"The user {verb} {rest}" if rest else text
     if lowered.startswith("preference for"):
         return f"The user has a {text}"
 
@@ -159,18 +202,36 @@ def extract_name(content: str) -> str | None:
     return match.group(1) if match else None
 
 
+def preference_domain(content: str) -> str | None:
+    """Return a soft preference bucket (e.g. food) when merge is safe."""
+    canon = canonicalize_fact_content(content)
+    match = _PREF_RE.match(canon)
+    if match is None:
+        return None
+    tokens = set(re.findall(r"[a-z0-9']+", match.group(1).lower()))
+    if tokens & _FOOD_PREF_MARKERS:
+        return "food"
+    return None
+
+
 def memory_key(content: str) -> str:
     """Semantic fingerprint used to group duplicate facts."""
     canon = canonicalize_fact_content(content)
     name = extract_name(canon)
     if name:
         return f"name:{name.lower()}"
+    domain = preference_domain(canon)
+    if domain:
+        return f"pref:{domain}"
     norm = _normalize(canon)
     for prefix in (
         "the user prefers ",
+        "the user likes ",
         "the user has a preference for ",
         "user prefers ",
+        "user likes ",
         "prefers ",
+        "likes ",
     ):
         if norm.startswith(prefix):
             return f"pref:{norm[len(prefix):]}"
@@ -209,6 +270,8 @@ def _canonicalize_in_place(fact: MemoryFact) -> bool:
 
 def _merge_group_into_keeper(keeper: MemoryFact, group: list[MemoryFact], *, key: str) -> bool:
     before = (keeper.content, keeper.importance, tuple(keeper.tags))
+    # Snapshot contents before mutating the keeper (which is one of the group).
+    original_contents = [canonicalize_fact_content(f.content) for f in group]
     for fact in group:
         keeper.importance = max(keeper.importance, fact.importance)
         for tag in fact.tags:
@@ -221,10 +284,49 @@ def _merge_group_into_keeper(keeper: MemoryFact, group: list[MemoryFact], *, key
         name = extract_name(keeper.content)
         if name:
             keeper.content = f"The user's name is {name}"
+    elif key.startswith("pref:") and preference_domain(
+        next((c for c in original_contents if preference_domain(c)), keeper.content)
+    ):
+        keeper.content = _merge_preference_contents(original_contents)
     else:
         keeper.content = canonicalize_fact_content(keeper.content)
     after = (keeper.content, keeper.importance, tuple(keeper.tags))
     return after != before
+
+
+def _merge_preference_contents(contents: list[str]) -> str:
+    """Combine preference tails into one 'The user likes/prefers …' fact."""
+    tails: list[str] = []
+    verb = "likes"
+    for content in contents:
+        match = _PREF_RE.match(content)
+        if match is None:
+            continue
+        lowered = content.lower()
+        if "prefer" in lowered.split()[0:4]:
+            verb = "prefers"
+        tail = match.group(1).strip().rstrip(".")
+        if not tail:
+            continue
+        # Avoid nesting already-merged lists awkwardly.
+        for part in re.split(r"\s*,\s*|\s+and\s+", tail):
+            part = part.strip()
+            if part and part.lower() not in {t.lower() for t in tails}:
+                tails.append(part)
+    if not tails:
+        return canonicalize_fact_content(contents[0]) if contents else ""
+    if len(tails) == 1:
+        return f"The user {verb} {tails[0]}"
+    if len(tails) == 2:
+        return f"The user {verb} {tails[0]} and {tails[1]}"
+    return f"The user {verb} {', '.join(tails[:-1])}, and {tails[-1]}"
+
+
+def merge_preference_content(existing: str, incoming: str) -> str:
+    """Public helper for merging two preference facts in the same domain."""
+    return _merge_preference_contents(
+        [canonicalize_fact_content(existing), canonicalize_fact_content(incoming)]
+    )
 
 
 def _collapse_containment(facts: list[MemoryFact]) -> tuple[list[MemoryFact], list[str]]:

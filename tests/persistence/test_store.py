@@ -107,3 +107,77 @@ def test_session_persists_across_instances(tmp_path: Path):
     assert s2.brain.state.emotional_drives.curiosity > 0
     assert s2.brain.memory.all() or s2.brain.state.user_familiarity > 0
     s2.close()
+
+
+def test_reset_character_clears_memories_and_restores_defaults(tmp_path: Path):
+    db = Database(tmp_path / "test.sqlite3")
+    store = CharacterPersistence("captain-redbeard", db=db)
+
+    memory = MemoryStore()
+    memory.add(MemoryFact(id="m1", content="User likes rum", importance=0.8), dirty=True)
+    store.persist_runtime(
+        EmotionalDrives(curiosity=0.99, energy=0.1),
+        trust=0.9,
+        familiarity=0.8,
+        memory=memory,
+    )
+    store.archive_memories(
+        [MemoryFact(id="m2", content="Old stale fact", importance=0.01, tags=[])]
+    )
+
+    defaults = EmotionalDrives(curiosity=0.55, trust=0.2, excitement=0.3, fear=0.2, confidence=0.5, energy=0.6)
+    stats = store.reset_character(defaults, trust=0.2, familiarity=0.0)
+
+    assert stats["memories_cleared"] == 1
+    assert stats["archived_cleared"] == 1
+    assert store.load_memory_store().all() == []
+    assert store.list_archived_memories() == []
+    loaded = store.load_drives(EmotionalDrives())
+    assert loaded.curiosity == 0.55
+    assert loaded.energy == 0.6
+    rel = store.load_relationship(0.0, 0.0)
+    assert rel.trust == 0.2
+    assert rel.familiarity == 0.0
+    store.close()
+
+
+def test_session_reset_wipes_runtime_and_sqlite(tmp_path: Path):
+    from character_os.llm.providers.stub import StubProvider
+    from character_os.session import CharacterSession
+
+    session = CharacterSession(
+        character_id="lumen",
+        llm=StubProvider(),
+        persist=True,
+        data_dir=tmp_path,
+        enable_scheduler=False,
+    )
+    session.send_message("My name is Ada and I love flatbread.")
+    assert session.brain.conversation.state.recent_turns
+    # Force a durable fact so reset has something to clear.
+    session.brain.memory.add(
+        MemoryFact(id="forced", content="The user's name is Ada", importance=0.9),
+        dirty=True,
+    )
+    session.brain._persist()
+
+    stats = session.reset()
+    assert stats["memories_cleared"] >= 1
+    assert session.brain.memory.all() == []
+    assert session.brain.conversation.state.recent_turns == []
+    assert session.brain.state.user_trust == session.character.default_trust
+    assert session.brain.state.user_familiarity == session.character.default_familiarity
+    assert session.brain.state.emotional_drives == session.character.emotional_drives
+    assert session.brain.state.tick_count == 0
+
+    # Durable wipe survives reopen.
+    session.close()
+    again = CharacterSession(
+        character_id="lumen",
+        llm=StubProvider(),
+        persist=True,
+        data_dir=tmp_path,
+        enable_scheduler=False,
+    )
+    assert again.brain.memory.all() == []
+    again.close()

@@ -118,6 +118,17 @@ def main(argv: list[str] | None = None) -> int:
         help="Omit archived memories",
     )
 
+    reset_p = sub.add_parser(
+        "reset-memories",
+        help="Wipe SQLite memories/drives/relationship for a character (pack defaults)",
+    )
+    reset_p.add_argument("character_id")
+    reset_p.add_argument(
+        "--confirm",
+        action="store_true",
+        help="Required — reset is irreversible for this character's rows",
+    )
+
     create_p = sub.add_parser("create-character", help="Scaffold a minimal character pack")
     create_p.add_argument("character_id")
     create_p.add_argument("--name", required=True)
@@ -207,6 +218,26 @@ def main(argv: list[str] | None = None) -> int:
                 include_archived=not args.no_archived,
             )
             return _emit(snap.__dict__, as_json=args.json, human=_format_runtime)
+
+        if args.command == "reset-memories":
+            if not args.confirm:
+                print(
+                    "reset-memories is irreversible for this character's SQLite rows. "
+                    "Re-run with --confirm.",
+                    file=sys.stderr,
+                )
+                return 2
+            result = studio.reset_runtime(args.character_id)
+            if args.json:
+                print(json.dumps(result, indent=2))
+            else:
+                print(
+                    f"Reset {result['character_id']}: "
+                    f"cleared {result['memories_cleared']} memory(ies), "
+                    f"{result['archived_cleared']} archived; "
+                    "drives/relationship restored to pack defaults"
+                )
+            return 0
 
         if args.command == "create-character":
             path = studio.create_character(

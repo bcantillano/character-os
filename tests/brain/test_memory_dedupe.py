@@ -73,16 +73,28 @@ def test_dedupe_collapses_name_and_preference_dupes():
     assert name_fact.importance == 0.7
 
 
-def test_dedupe_collapses_short_family_prefix():
+def test_dedupe_merges_food_preference_fragments():
     store = MemoryStore()
-    store.add(MemoryFact(id="short", content="Byron has a family", importance=0.5))
-    store.add(
-        MemoryFact(id="long", content="Byron has a family on Medeira", importance=0.55)
-    )
+    store.add(MemoryFact(id="a", content="likes spicy", importance=0.6))
+    store.add(MemoryFact(id="b", content="The user likes bold food", importance=0.55))
     removed = store.dedupe()
-    assert removed == ["short"]
-    assert len(store.all()) == 1
-    assert "Medeira" in store.all()[0].content
+    assert len(removed) == 1
+    facts = store.all()
+    assert len(facts) == 1
+    content = facts[0].content.lower()
+    assert "spicy" in content
+    assert "bold" in content
+    assert memory_key("likes spicy") == memory_key("The user likes bold food")
+    assert memory_key("likes spicy") == "pref:food"
+
+
+def test_tea_preference_does_not_merge_with_food():
+    store = MemoryStore()
+    store.add(MemoryFact(id="tea", content="The user likes tea", importance=0.6))
+    store.add(MemoryFact(id="spicy", content="The user likes spicy food", importance=0.6))
+    removed = store.dedupe()
+    assert removed == []
+    assert len(store.all()) == 2
 
 
 def test_dedupe_collapses_contained_compass_facts():

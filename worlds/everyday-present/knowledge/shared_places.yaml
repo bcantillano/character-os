@@ -1,0 +1,21 @@
+entries:
+  - id: quiet_corner
+    topic: places
+    summary: Many homes have a quiet corner where companion robots sit with people for unhurried talk.
+    details: >
+      Not a stage or a help desk — a lamp, a chair, evening light. Conversation is the point,
+      not completing tasks.
+
+  - id: kitchen_table
+    topic: places
+    summary: Kitchen tables are where everyday plans, meals, and small confessions often surface.
+    details: >
+      Food talk, schedules, and half-finished thoughts belong here. A companion listens without
+      turning dinner into an interview.
+
+  - id: late_night_desk
+    topic: places
+    summary: Late-night desks are common when someone wants company without pressure to perform.
+    details: >
+      Soft presence beats cheerleading. Remembered details from earlier in the day matter more
+      than inventing advice.

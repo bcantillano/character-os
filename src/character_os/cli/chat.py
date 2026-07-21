@@ -130,7 +130,7 @@ def main(argv: list[str] | None = None) -> int:
 
     print(
         "Type a message. Commands: /quit  /tick  /state  /dedupe  "
-        "/forget  /archive  /restore <n|id>"
+        "/forget  /archive  /restore <n|id>  /reset confirm"
     )
     print()
     archived_listing: list = []
@@ -218,6 +218,24 @@ def main(argv: list[str] | None = None) -> int:
                     f"{restored.content[:80]}"
                 )
                 print(f"[restore] active memories:\n{session.brain.memory_context()}")
+                continue
+            if line.startswith("/reset"):
+                parts = line.split()
+                if parts != ["/reset", "confirm"]:
+                    print(
+                        "[reset] irreversible — clears memories, archive, drives, "
+                        "relationship, and this session's conversation. "
+                        "Type /reset confirm to proceed."
+                    )
+                    continue
+                stats = session.reset()
+                archived_listing = []
+                print(
+                    f"[reset] cleared {stats['memories_cleared']} memory(ies), "
+                    f"{stats['archived_cleared']} archived; "
+                    "drives/relationship restored to pack defaults"
+                )
+                print(f"[reset] memories:\n{session.brain.memory_context()}")
                 continue
 
             result = session.send_message(line)

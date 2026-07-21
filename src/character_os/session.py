@@ -263,6 +263,15 @@ class CharacterSession:
     def tick(self) -> None:
         self.scheduler.tick_once()
 
+    def reset(self) -> dict[str, int]:
+        """Reset conversation, memories, drives, and relationship to pack defaults."""
+        if self.speak_voice is not None:
+            self.speak_voice.stop()
+        self.last_response = None
+        self._pending = None
+        self.last_audio_path = None
+        return self.brain.reset()
+
     def close(self) -> None:
         self.scheduler.stop()
         if self.speak_voice is not None:

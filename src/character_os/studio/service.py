@@ -191,6 +191,28 @@ class StudioService:
             db_path=str(persistence.db.path),
         )
 
+    def reset_runtime(self, character_id: str) -> dict[str, object]:
+        """Wipe SQLite memories/drives/relationship for a character back to pack defaults."""
+        character = load_character(character_id, characters_dir=self.characters_dir)
+        persistence = CharacterPersistence(character_id, data_dir=self.data_dir)
+        try:
+            stats = persistence.reset_character(
+                character.emotional_drives,
+                trust=character.default_trust,
+                familiarity=character.default_familiarity,
+            )
+            return {
+                "character_id": character_id,
+                "memories_cleared": stats["memories_cleared"],
+                "archived_cleared": stats["archived_cleared"],
+                "trust": character.default_trust,
+                "familiarity": character.default_familiarity,
+                "drives": character.emotional_drives.as_dict(),
+                "db_path": str(persistence.db.path),
+            }
+        finally:
+            persistence.close()
+
     def create_character(
         self,
         character_id: str,

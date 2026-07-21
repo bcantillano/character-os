@@ -75,6 +75,24 @@ def test_inspect_runtime_empty_db(tmp_path: Path):
     assert isinstance(snap.drives, dict)
 
 
+def test_reset_runtime_clears_memories(tmp_path: Path):
+    from character_os.core.types import EmotionalDrives
+    from character_os.persistence.store import CharacterPersistence
+
+    studio = StudioService(data_dir=tmp_path)
+    persistence = CharacterPersistence("lumen", data_dir=tmp_path)
+    persistence.remember_fact("The user's name is Ada", importance=0.9)
+    persistence.emotions.save("lumen", EmotionalDrives(curiosity=0.99))
+    persistence.close()
+
+    result = studio.reset_runtime("lumen")
+    assert result["memories_cleared"] == 1
+    snap = studio.inspect_runtime("lumen")
+    assert snap.active_memories == []
+    assert snap.archived_memories == []
+    assert snap.drives["curiosity"] < 0.99
+
+
 def test_validate_existing_packs():
     studio = StudioService()
     assert studio.validate_character("lumen").ok
