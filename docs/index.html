@@ -218,6 +218,20 @@
 
     <script>
       (() => {
+        // Refresh should land at the top; a leftover #architecture hash
+        // (or browser scroll restoration) was jumping past the hero.
+        if ("scrollRestoration" in history) {
+          history.scrollRestoration = "manual";
+        }
+        const navEntry = performance.getEntriesByType("navigation")[0];
+        const isReload = navEntry?.type === "reload";
+        if (isReload && location.hash) {
+          history.replaceState(null, "", `${location.pathname}${location.search}`);
+        }
+        if (isReload || !location.hash) {
+          window.scrollTo(0, 0);
+        }
+
         const els = document.querySelectorAll(
           ".hero-copy, .lifecycle li, .pillars li, .built-grid article, .quote-panel, .craft-list li"
         );
