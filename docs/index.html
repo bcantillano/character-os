@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Character OS — Portfolio Case Study</title>
+    <meta
+      name="description"
+      content="Character OS is a Python framework for believable AI characters — event-driven lifecycle, long-term memory, YAML packs, and iterative LLM prompting."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Syne:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./assets/portfolio.css" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="site-nav">
+      <a class="nav-brand" href="./">Character OS</a>
+      <nav aria-label="Page">
+        <a href="#architecture">Architecture</a>
+        <a href="#built">Built</a>
+        <a href="#prompting">Prompting</a>
+        <a href="https://github.com/bcantillano/character-os">GitHub</a>
+      </nav>
+    </header>
+
+    <main id="main">
+      <section class="hero" aria-label="Introduction">
+        <div class="hero-copy">
+          <p class="brand">Character OS</p>
+          <h1>Characters that remember — not chatbots that answer.</h1>
+          <p class="lede">
+            A Python framework for believable interactive characters: personality,
+            memory, emotion, and goals on an event-driven brain.
+          </p>
+          <div class="cta-row">
+            <a class="btn primary" href="https://github.com/bcantillano/character-os"
+              >View on GitHub</a
+            >
+            <a class="btn ghost" href="#architecture">See how it works</a>
+          </div>
+        </div>
+        <div class="hero-visual" aria-hidden="true">
+          <img
+            src="./assets/hero.svg"
+            width="960"
+            height="720"
+            alt=""
+            decoding="async"
+          />
+        </div>
+      </section>
+
+      <section class="band" id="why">
+        <div class="wrap narrow">
+          <h2>The idea</h2>
+          <p>
+            Most LLM demos feel like assistants. Character OS asks a different
+            question: can software make someone feel they met a
+            <em>character</em> — with motives, memory, and a point of view?
+          </p>
+          <p>
+            The brain is the product. Embodiment (CLI today, voice, vision, or
+            robots later) plugs into the same event bus without rewriting the
+            lifecycle.
+          </p>
+        </div>
+      </section>
+
+      <section class="band alt" id="architecture">
+        <div class="wrap">
+          <h2>Architecture</h2>
+          <p class="section-lede">
+            Every turn follows one loop. New inputs publish events; they never
+            bypass the pipeline.
+          </p>
+          <ol class="lifecycle" aria-label="Character lifecycle">
+            <li><span>Observe</span></li>
+            <li><span>Interpret</span></li>
+            <li><span>Reflect</span></li>
+            <li><span>Decide</span></li>
+            <li><span>Act</span></li>
+            <li><span>Remember</span></li>
+          </ol>
+          <ul class="pillars">
+            <li>
+              <h3>Event bus</h3>
+              <p>
+                Modules publish and subscribe — decision produces intent;
+                behavior executes action. No tangled cross-module calls.
+              </p>
+            </li>
+            <li>
+              <h3>Data-driven packs</h3>
+              <p>
+                New characters are YAML + Markdown prompts under
+                <code>characters/</code> and shared worlds under
+                <code>worlds/</code>. Content stays configuration, not code.
+              </p>
+            </li>
+            <li>
+              <h3>Provider-agnostic LLM</h3>
+              <p>
+                Stub and OpenAI providers behind one interface so the brain can
+                be tested without burning tokens — then run live when it matters.
+              </p>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="band" id="built">
+        <div class="wrap">
+          <h2>What I built</h2>
+          <p class="section-lede">
+            Phases 1–2 are demo-ready: text brain, voice out, and an authoring
+            studio — all in Python.
+          </p>
+          <div class="built-grid">
+            <article>
+              <h3>Character brain</h3>
+              <p>
+                Persistent long-term memory, emotional drives, goals, internal
+                thoughts, and relationship trust/familiarity across sessions.
+              </p>
+            </article>
+            <article>
+              <h3>Voice (TTS)</h3>
+              <p>
+                Character voice profiles, sentence-chunked playback for lower
+                time-to-first-audio, and speech-text normalization for dialect.
+              </p>
+            </article>
+            <article>
+              <h3>Character Studio</h3>
+              <p>
+                CLI + optional web UI to create/edit packs, validate YAML,
+                inspect memories, and stage-debug a single message through the
+                lifecycle.
+              </p>
+            </article>
+            <article>
+              <h3>Ops for iteration</h3>
+              <p>
+                <code>/reset confirm</code>, preference-fact merge, and
+                probe-driven prompt passes so companion tone can be tightened
+                against live OpenAI transcripts.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="band alt" id="prompting">
+        <div class="wrap">
+          <h2>Prompting as craft</h2>
+          <p class="section-lede">
+            Personality is not one system prompt. It is pack-level Markdown,
+            examples, and hard rules iterated against real conversations.
+          </p>
+          <blockquote class="quote-panel">
+            <p>
+              Absolute “never ask questions” made a fresh companion feel curt.
+              Measured curiosity — introduce on first hello, then a question
+              cooldown — restored warmth without sliding into interview mode.
+            </p>
+            <footer>Lesson from Lumen probe loops (work-share + food scripts)</footer>
+          </blockquote>
+          <ul class="craft-list">
+            <li>Good/Bad reply examples outperform vague style adjectives</li>
+            <li>
+              Memory honesty rules stop “I remember you” when the store is empty
+            </li>
+            <li>
+              Food and preference facts need both prompt rules and code merge
+              paths
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="band" id="stack">
+        <div class="wrap narrow">
+          <h2>Stack</h2>
+          <p>
+            Python&nbsp;3 · event-driven architecture · SQLite persistence ·
+            OpenAI LLM + TTS · YAML/Markdown content packs · pytest · CLI entry
+            points
+          </p>
+          <div class="cta-row">
+            <a class="btn primary" href="https://github.com/bcantillano/character-os"
+              >Explore the repository</a
+            >
+            <a
+              class="btn ghost"
+              href="https://github.com/bcantillano/character-os/blob/feature/dev/docs/ARCHITECTURE.md"
+              >Read the architecture docs</a
+            >
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>
+        Built by
+        <a href="https://github.com/bcantillano">Byron Cantillano</a>
+        ·
+        <a href="https://github.com/bcantillano/character-os">character-os</a>
+        on GitHub
+      </p>
+    </footer>
+
+    <script>
+      (() => {
+        const els = document.querySelectorAll(
+          ".hero-copy, .lifecycle li, .pillars li, .built-grid article, .quote-panel, .craft-list li"
+        );
+        const io = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((e) => {
+              if (e.isIntersecting) {
+                e.target.classList.add("in");
+                io.unobserve(e.target);
+              }
+            });
+          },
+          { threshold: 0.12, rootMargin: "0px 0px -8% 0px" }
+        );
+        els.forEach((el, i) => {
+          el.style.setProperty("--d", `${Math.min(i * 0.04, 0.28)}s`);
+          io.observe(el);
+        });
+        document.querySelector(".hero-copy")?.classList.add("in");
+      })();
+    </script>
+  </body>
+</html>
