@@ -121,6 +121,29 @@ class CharacterPersistence:
     def remember_fact(self, content: str, *, importance: float = 0.5, tags: list[str] | None = None) -> MemoryFact:
         return self.memories.add_fact(self.character_id, content, importance=importance, tags=tags)
 
+    def reset_character(
+        self,
+        drives: EmotionalDrives,
+        *,
+        trust: float,
+        familiarity: float,
+    ) -> dict[str, int]:
+        """Wipe durable state for this character and restore pack defaults.
+
+        Clears active + archived memories, then writes default drives and
+        relationship. Does not touch other characters' rows.
+        """
+        active, archived = self.memories.clear_all(self.character_id)
+        self.emotions.save(self.character_id, drives)
+        self.relationships.save(
+            self.character_id,
+            RelationshipRecord(DEFAULT_ENTITY, trust, familiarity),
+        )
+        return {
+            "memories_cleared": active,
+            "archived_cleared": archived,
+        }
+
     def close(self) -> None:
         self.db.close()
 

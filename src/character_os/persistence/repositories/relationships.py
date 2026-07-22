@@ -52,3 +52,11 @@ class RelationshipsRepository:
             (character_id, record.entity_id, record.trust, record.familiarity),
         )
         conn.commit()
+
+    def delete_all(self, character_id: str) -> None:
+        conn = self.db.connect()
+        conn.execute(
+            "DELETE FROM relationships WHERE character_id = ?",
+            (character_id,),
+        )
+        conn.commit()

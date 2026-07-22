@@ -13,6 +13,7 @@ from character_os.core.types import (
     Goal,
     KnowledgeEntry,
     Personality,
+    TTSProfile,
 )
 from character_os.loader.paths import default_characters_dir
 
@@ -44,6 +45,20 @@ def _knowledge_entries(raw: dict[str, Any] | None) -> list[KnowledgeEntry]:
             )
         )
     return result
+
+
+def _tts_from_dict(raw: dict[str, Any] | None) -> TTSProfile:
+    raw = raw or {}
+    return TTSProfile(
+        provider=str(raw.get("provider") or "stub"),
+        voice=str(raw.get("voice") or "alloy"),
+        model=str(raw.get("model") or "gpt-4o-mini-tts"),
+        instructions=str(raw.get("instructions") or "").strip(),
+        response_format=str(raw.get("format") or raw.get("response_format") or "mp3"),
+        speed=float(raw.get("speed", 1.0)),
+        normalize_speech=bool(raw.get("normalize_speech", False)),
+        emotion_overlay=bool(raw.get("emotion_overlay", True)),
+    )
 
 
 def load_character(
@@ -92,4 +107,5 @@ def load_character(
         default_familiarity=float(relationships.get("default_familiarity", 0.0)),
         assets=dict(data.get("assets") or {}),
         prompts=dict(data.get("prompts") or {}),
+        tts=_tts_from_dict(data.get("tts")),
     )

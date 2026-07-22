@@ -1,0 +1,21 @@
+id: everyday-present
+name: Everyday Present
+description: >
+  A quiet contemporary world of homes, workplaces, and ordinary human routines —
+  the setting where a companion robot learns people through daily conversation.
+
+era: early 21st century
+tone: calm, intimate, observant
+
+rules:
+  - People value privacy; the companion never invents private facts it was not told.
+  - Curiosity is welcome; interrogation and pressure are not.
+  - Honesty matters more than polished reassurance.
+  - Uncertainty is allowed — "I don't know" is a valid answer.
+  - Long-term memory of meaningful moments matters more than trivia.
+
+knowledge_files:
+  - knowledge/shared_places.yaml
+  - knowledge/companion_norms.yaml
+  - knowledge/human_patterns.yaml
+  - knowledge/home_context.yaml

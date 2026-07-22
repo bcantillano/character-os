@@ -71,6 +71,22 @@ class Personality:
 
 
 @dataclass
+class TTSProfile:
+    """Provider settings for Phase 1b voice output (not personality writing style)."""
+
+    provider: str = "stub"
+    voice: str = "alloy"
+    model: str = "gpt-4o-mini-tts"
+    instructions: str = ""
+    response_format: str = "mp3"
+    speed: float = 1.0
+    # Soften dialect orthography for TTS only (printed text unchanged).
+    normalize_speech: bool = False
+    # Append subtle drive-based delivery hints to instructions at speak time.
+    emotion_overlay: bool = True
+
+
+@dataclass
 class CharacterDefinition:
     """Static character pack loaded from YAML (not runtime state)."""
 
@@ -86,6 +102,7 @@ class CharacterDefinition:
     default_familiarity: float = 0.0
     assets: dict[str, str] = field(default_factory=dict)
     prompts: dict[str, str] = field(default_factory=dict)
+    tts: TTSProfile = field(default_factory=TTSProfile)
 
 
 @dataclass

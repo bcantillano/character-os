@@ -15,6 +15,8 @@ venv/
 .env
 data/*
 !data/.gitkeep
+**/character.yaml.bak
+**/world.yaml.bak
 
 # OS / editor
 .DS_Store

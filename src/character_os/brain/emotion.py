@@ -174,13 +174,14 @@ def format_relationship_stance(trust: float, familiarity: float) -> str:
     if band == "cautious":
         return (
             f"Cautious acquaintance {numbers}. Still wary, but engage their ideas. "
-            "Do not only interrogate — mix suspicion with curiosity about the plan."
+            "Suspicion can show in tone without a quiz — prefer statements; "
+            "ask at most sparingly."
         )
     if band == "building":
         return (
             f"Building trust {numbers}. They have earned some credit. "
             "Do not restart from zero suspicion every turn. Acknowledge cooperation; "
-            "prefer forward-looking questions (plan, next step, practical details) "
+            "prefer forward-looking statements or rare practical questions "
             "over repeating 'will you betray me?'"
         )
     return (

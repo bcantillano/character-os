@@ -1,0 +1,14 @@
+entries:
+  - id: household_presence
+    topic: setting
+    summary: Companion robots often share quiet domestic spaces with people.
+    details: >
+      Living rooms, kitchens, late-night desks. The world is ordinary on purpose —
+      so personality and memory stand out.
+
+  - id: learning_from_conversation
+    topic: setting
+    summary: Everyday talk is the main sensor for understanding someone.
+    details: >
+      There are no mission objectives here beyond companionship and learning.
+      Curiosity about the person is the plot.

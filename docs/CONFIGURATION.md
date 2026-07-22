@@ -52,15 +52,33 @@ Each character is a self-contained pack. `character.yaml` is required.
 | `name` | yes | Display name |
 | `world` | yes | Reference to a `worlds/<world_id>/` pack |
 | `description` | yes | Short identity summary |
-| `personality` | yes | Traits, voice, fears, preferences |
+| `personality` | yes | Traits, voice (writing style), fears, preferences |
 | `emotional_drives` | no | Initial Curiosity, Trust, Excitement, Fear, Confidence, Energy (each 0.0–1.0); defaults if omitted |
 | `goals` | yes | What the character wants |
 | `knowledge` | no | Character-specific facts not in the world pack |
 | `relationships` | no | Default trust baselines for long-term relationship state |
 | `prompts` | no | Per-character prompt overrides (paths to `.md` files) |
 | `assets` | no | Paths to supporting files under `assets/` |
+| `tts` | no | Phase 1b voice profile (provider, voice id, model, instructions) |
 
 Characters **inherit world knowledge** from their referenced world pack. The `knowledge` block in `character.yaml` adds private or character-specific facts only.
+
+### TTS profile (`tts`)
+
+Optional. Separate from `personality.voice` (dialogue writing style). Used when the CLI enables TTS (`--tts` / `--tts-play`).
+
+With `--tts-play`, speech is synthesized in sentence-sized chunks so playback can start after the first chunk (lower time-to-first-audio). `--tts` without play still synthesizes the full reply as one file.
+
+| Field | Default | Description |
+|-------|---------|-------------|
+| `provider` | `stub` | `stub` or `openai` |
+| `voice` | `alloy` | Provider voice id (e.g. OpenAI `onyx`) |
+| `model` | `gpt-4o-mini-tts` | TTS model id |
+| `format` | `mp3` | Audio container (`mp3`, `wav`, …) |
+| `speed` | `1.0` | Playback speed (provider-dependent) |
+| `instructions` | _(empty)_ | Style prompt for `gpt-4o-mini-tts` (ignored by `tts-1`) |
+| `normalize_speech` | `false` | Soften dialect orthography for TTS only (CLI text unchanged) |
+| `emotion_overlay` | `true` | Append mild delivery hints from current emotional drives |
 
 ### assets/
 
@@ -71,6 +89,10 @@ characters/captain-redbeard/
 ├── character.yaml
 └── assets/
     └── portrait.png
+
+characters/lumen/
+├── character.yaml
+└── assets/
 ```
 
 ---

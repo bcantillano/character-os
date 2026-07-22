@@ -58,3 +58,11 @@ class EmotionRepository:
             ),
         )
         conn.commit()
+
+    def delete(self, character_id: str) -> None:
+        conn = self.db.connect()
+        conn.execute(
+            "DELETE FROM emotional_drives WHERE character_id = ?",
+            (character_id,),
+        )
+        conn.commit()

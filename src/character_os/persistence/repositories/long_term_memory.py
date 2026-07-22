@@ -86,6 +86,31 @@ class LongTermMemoryRepository:
         conn.commit()
         return len(memory_ids)
 
+    def clear_all(self, character_id: str) -> tuple[int, int]:
+        """Delete all active and archived memories for a character.
+
+        Returns ``(active_deleted, archived_deleted)``.
+        """
+        conn = self.db.connect()
+        active = conn.execute(
+            "SELECT COUNT(*) AS n FROM long_term_memories WHERE character_id = ?",
+            (character_id,),
+        ).fetchone()["n"]
+        archived = conn.execute(
+            "SELECT COUNT(*) AS n FROM archived_memories WHERE character_id = ?",
+            (character_id,),
+        ).fetchone()["n"]
+        conn.execute(
+            "DELETE FROM long_term_memories WHERE character_id = ?",
+            (character_id,),
+        )
+        conn.execute(
+            "DELETE FROM archived_memories WHERE character_id = ?",
+            (character_id,),
+        )
+        conn.commit()
+        return int(active), int(archived)
+
     def decay_importance(self, character_id: str, amount: float = 0.01) -> None:
         conn = self.db.connect()
         conn.execute(
