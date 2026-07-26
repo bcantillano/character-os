@@ -106,19 +106,20 @@ def test_lumen_prompt_override_loads():
         "response_generator",
         override_path=character.prompts["response_generator"],
     )
-    assert "default: no question" in text.lower()
-    assert "that sounds like" in text.lower()
+    assert "not a stenographer" in text.lower() or "stenographer" in text.lower()
+    assert "question gate" in text.lower()
+    assert "reply shape" in text.lower()
+    assert "that sounds" in text.lower()
     assert "how about" in text.lower()
-    assert "current turn wins" in text.lower()
-    assert "food lists" in text.lower()
-    assert "dark knight" in text.lower()
+    assert "pretzel burger" in text.lower()
+    assert "final check" in text.lower()
     assert "### examples" in text.lower()
     thoughts = loader.load(
         "internal_thoughts",
         override_path=character.prompts["internal_thoughts"],
     )
     assert "user just said" in thoughts.lower()
-    assert "recent dialogue" in thoughts.lower()
+    assert "statements only" in thoughts.lower()
     assert "i wonder" in thoughts.lower()
     assert "protein" in thoughts.lower() or "nutrition" in thoughts.lower()
     goal = next(g for g in character.goals if g.id == "understand_people")

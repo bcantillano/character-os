@@ -17,7 +17,8 @@ from character_os.core.types import IntentKind
 from character_os.decision.engine import DecisionEngine
 from character_os.events.bus import EventBus
 from character_os.events.registry import EventRegistry
-from character_os.events.types import ResponseReadyEvent, UserMessageEvent
+from character_os.awareness.bridge import SpeechInputBridge
+from character_os.events.types import ResponseReadyEvent, SpeechRecognizedEvent, UserMessageEvent
 from character_os.interpreter.handler import ConversationInterpreter
 from character_os.loader import PromptLoader, load_character, load_world
 from character_os.llm import LLMProvider, create_provider
@@ -48,6 +49,8 @@ class CharacterSession:
         enable_tts: bool = False,
         tts_provider_name: str | None = None,
         tts_play: bool = False,
+        enable_stt: bool = False,
+        stt_provider_name: str | None = None,
     ) -> None:
         self.character_id = character_id
         self.session_id = str(uuid4())
@@ -65,7 +68,18 @@ class CharacterSession:
         self.last_response: SessionResult | None = None
         self._pending: SessionResult | None = None
         self.last_audio_path: Path | None = None
+        self.last_stt_transcript: str = ""
         self.speak_voice = None
+        self.stt = None
+        self.stt_provider_name: str | None = None
+        if enable_stt:
+            import os
+
+            self.stt_provider_name = (
+                stt_provider_name
+                or os.getenv("CHARACTER_OS_STT_PROVIDER")
+                or "stub"
+            ).lower()
 
         self.persistence = create_persistence(self.character, data_dir=data_dir) if persist else None
         self.brain = BrainOrchestrator(
@@ -128,6 +142,15 @@ class CharacterSession:
         decision.wire()
         executor.wire()
         response.wire()
+
+        # Always bridge speech Observe → shared UserMessage interpret path.
+        SpeechInputBridge(self.bus).wire()
+        self.registry.register("awareness", lambda bus: None)
+
+        if enable_stt:
+            from character_os.awareness import create_stt_provider
+
+            self.stt = create_stt_provider(self.stt_provider_name)
 
         if enable_tts:
             from character_os.behavior.actions.speak_voice import SpeakVoiceAction
@@ -259,6 +282,40 @@ class CharacterSession:
         if self._pending is None:
             raise RuntimeError("Pipeline did not produce ResponseReadyEvent")
         return self._pending
+
+    def send_speech(self, text: str, *, audio_path: str = "", provider: str = "") -> SessionResult:
+        """Publish SpeechRecognizedEvent (Phase 3 Observe) and run the text pipeline."""
+        self._pending = None
+        self.last_stt_transcript = text
+        self.bus.publish(
+            SpeechRecognizedEvent(
+                character_id=self.character.id,
+                session_id=self.session_id,
+                text=text,
+                audio_path=audio_path,
+                provider=provider or (self.stt_provider_name or "direct"),
+            )
+        )
+        if self._pending is None:
+            raise RuntimeError("Pipeline did not produce ResponseReadyEvent")
+        return self._pending
+
+    def send_audio(self, audio_path: Path | str) -> SessionResult:
+        """Transcribe audio via the session STT provider, then send_speech."""
+        if self.stt is None:
+            raise RuntimeError(
+                "STT is not enabled. Construct CharacterSession with enable_stt=True "
+                "or pass --stt on the CLI."
+            )
+        path = Path(audio_path)
+        transcript = self.stt.transcribe(path)
+        if not transcript.strip():
+            raise RuntimeError(f"STT produced an empty transcript for {path}")
+        return self.send_speech(
+            transcript,
+            audio_path=str(path),
+            provider=self.stt_provider_name or "unknown",
+        )
 
     def tick(self) -> None:
         self.scheduler.tick_once()

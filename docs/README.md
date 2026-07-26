@@ -38,9 +38,11 @@ No computer vision.
 
 No movement.
 
-Voice output (TTS) is Phase 1b and optional via `--tts` / `--tts-play`. With `--tts-play`, audio starts after the first sentence chunk synthesizes (overlapping later chunks). Speech recognition remains Phase 3.
+Voice output (TTS) is Phase 1b and optional via `--tts` / `--tts-play`. With `--tts-play`, audio starts after the first sentence chunk synthesizes (overlapping later chunks).
 
-The goal is to create a believable character through text conversation alone (Phase 1), then layer spoken delivery without changing the brain pipeline.
+Phase 3 STT is optional via `--stt` / `--stt-file` / `/listen`. Spoken input publishes `SpeechRecognizedEvent` and joins the same Observe→Remember pipeline as typed text. See `docs/PHASE_3_AWARENESS.md`.
+
+The goal is to create a believable character through text conversation alone (Phase 1), then layer spoken delivery and recognition without changing the brain pipeline.
 
 Success means the user feels they met a character — not that they used an AI. See Phase 1 success criteria in `docs/ROADMAP.md` and the lifecycle in `docs/CHARACTER_LIFECYCLE.md`.
 

@@ -54,9 +54,11 @@ See `docs/PHASE_2_STUDIO.md`. CLI: `character-os-studio` (list/show/validate/set
 
 World Awareness
 
-- speech recognition
+- speech recognition (STT) — `SpeechRecognizedEvent` → shared text pipeline
 - computer vision
 - context awareness
+
+See `docs/PHASE_3_AWARENESS.md` for the STT MVP.
 
 ---
 

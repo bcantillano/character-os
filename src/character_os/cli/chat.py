@@ -1,6 +1,7 @@
-"""Text CLI — Phase 1 entry point.
+"""Text CLI — Phase 1 entry point; Phase 3 STT optional.
 
-Publishes UserMessageEvent and prints ResponseReadyEvent output.
+Publishes UserMessageEvent (typed) or SpeechRecognizedEvent (spoken) and prints
+ResponseReadyEvent output.
 """
 
 from __future__ import annotations
@@ -8,6 +9,8 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+import tempfile
+from pathlib import Path
 
 from character_os.brain.scheduler import DEFAULT_TICK_INTERVAL_SECONDS
 from character_os.env import load_env
@@ -83,6 +86,19 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Play synthesized audio via system player (implies --tts)",
     )
+    parser.add_argument(
+        "--stt",
+        nargs="?",
+        const="auto",
+        default=None,
+        metavar="PROVIDER",
+        help="Enable Phase 3 STT (optional provider: stub|openai; default CHARACTER_OS_STT_PROVIDER or stub)",
+    )
+    parser.add_argument(
+        "--stt-file",
+        metavar="PATH",
+        help="Transcribe one audio/text file via STT and exit (implies --stt)",
+    )
     args = parser.parse_args(argv)
 
     enable_tts = args.tts is not None or args.tts_play or _env_flag("CHARACTER_OS_TTS")
@@ -92,17 +108,30 @@ def main(argv: list[str] | None = None) -> int:
     elif enable_tts and os.getenv("CHARACTER_OS_TTS_PROVIDER"):
         tts_provider_name = os.getenv("CHARACTER_OS_TTS_PROVIDER")
 
+    enable_stt = (
+        args.stt is not None
+        or args.stt_file is not None
+        or _env_flag("CHARACTER_OS_STT")
+    )
+    stt_provider_name: str | None = None
+    if args.stt and args.stt != "auto":
+        stt_provider_name = args.stt
+    elif enable_stt and os.getenv("CHARACTER_OS_STT_PROVIDER"):
+        stt_provider_name = os.getenv("CHARACTER_OS_STT_PROVIDER")
+
     try:
         session = CharacterSession(
             character_id=args.character,
             provider_name=args.provider,
             tick_interval_seconds=args.tick_interval,
-            enable_scheduler=args.enable_ticks and not args.once,
+            enable_scheduler=args.enable_ticks and not args.once and not args.stt_file,
             persist=not args.no_persist,
             debug_stages=args.debug_stages,
             enable_tts=enable_tts,
             tts_provider_name=tts_provider_name,
             tts_play=args.tts_play,
+            enable_stt=enable_stt,
+            stt_provider_name=stt_provider_name,
         )
     except (ValueError, ImportError) as exc:
         print(f"Error starting session: {exc}", file=sys.stderr)
@@ -115,6 +144,26 @@ def main(argv: list[str] | None = None) -> int:
         tts_label = tts_provider_name or session.character.tts.provider
         play_note = " + play" if args.tts_play else ""
         print(f"TTS: {tts_label}{play_note} (voice={session.character.tts.voice})")
+    if enable_stt:
+        stt_label = stt_provider_name or session.stt_provider_name or "stub"
+        print(f"STT: {stt_label}")
+    if args.stt_file:
+        print()
+        try:
+            result = session.send_audio(args.stt_file)
+            print(f"[stt] {session.last_stt_transcript}")
+            if args.show_thoughts and result.thoughts:
+                print(f"(thoughts) {result.thoughts}")
+            print(f"{session.character.name}> {result.text}")
+            if result.audio_path:
+                print(f"[tts] {result.audio_path}")
+        except (RuntimeError, FileNotFoundError, ValueError, ImportError) as exc:
+            print(f"Error: {exc}", file=sys.stderr)
+            session.close()
+            return 1
+        finally:
+            session.close()
+        return 0
     if args.once:
         print()
         try:
@@ -128,10 +177,13 @@ def main(argv: list[str] | None = None) -> int:
             session.close()
         return 0
 
-    print(
+    commands = (
         "Type a message. Commands: /quit  /tick  /state  /dedupe  "
         "/forget  /archive  /restore <n|id>  /reset confirm"
     )
+    if enable_stt:
+        commands += "  /listen"
+    print(commands)
     print()
     archived_listing: list = []
 
@@ -237,6 +289,23 @@ def main(argv: list[str] | None = None) -> int:
                 )
                 print(f"[reset] memories:\n{session.brain.memory_context()}")
                 continue
+            if line == "/listen":
+                if not enable_stt:
+                    print("[stt] enable with --stt or CHARACTER_OS_STT=1")
+                    continue
+                try:
+                    result = _listen_once(session)
+                except (RuntimeError, FileNotFoundError, ValueError, ImportError) as exc:
+                    print(f"[stt] {exc}", file=sys.stderr)
+                    continue
+                print(f"[stt] {session.last_stt_transcript}")
+                if args.show_thoughts and result.thoughts:
+                    print(f"(thoughts) {result.thoughts}")
+                print(f"{session.character.name}> {result.text}")
+                if result.audio_path:
+                    print(f"[tts] {result.audio_path}")
+                print()
+                continue
 
             result = session.send_message(line)
             if args.show_thoughts and result.thoughts:
@@ -249,6 +318,24 @@ def main(argv: list[str] | None = None) -> int:
         session.close()
 
     return 0
+
+
+def _listen_once(session: CharacterSession):
+    """Record push-to-talk audio (or stub without mic) and run STT → pipeline."""
+    from character_os.awareness.capture import record_push_to_talk
+    from character_os.awareness.providers.stub import StubSTTProvider
+
+    if isinstance(session.stt, StubSTTProvider):
+        # Stub path: no mic — feed the default transcript through SpeechRecognizedEvent.
+        return session.send_speech(
+            session.stt.default_transcript,
+            provider="stub",
+        )
+
+    with tempfile.TemporaryDirectory(prefix="character-os-stt-") as tmp:
+        wav_path = Path(tmp) / "utterance.wav"
+        record_push_to_talk(wav_path)
+        return session.send_audio(wav_path)
 
 
 def _resolve_archive_id(token: str, listing: list, session: CharacterSession) -> str | None:

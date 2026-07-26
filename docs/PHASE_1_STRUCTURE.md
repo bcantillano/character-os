@@ -222,7 +222,7 @@ brain/scheduler.py
 | `behavior/` | Action execution | Phase 1b adds `actions/speak_voice.py`; Phase 4 adds proactive and motion actions |
 | `llm/` | Abstract provider + OpenAI default | Anthropic / Ollama providers drop in beside OpenAI |
 | `interpreter/` | Converts raw input events to structured signals | Phase 3 adds vision/speech interpreters publishing the same `InputInterpretedEvent` |
-| `cli/` | Publishes `UserMessageEvent` | Phase 3 STT publishes the same event type from a different source |
+| `cli/` | Publishes `UserMessageEvent` | Phase 3 STT publishes `SpeechRecognizedEvent`; bridge emits `UserMessageEvent` for the shared interpret path |
 
 ---
 

@@ -11,6 +11,7 @@ from character_os.events.types import (
     InputInterpretedEvent,
     IntentDecidedEvent,
     ResponseReadyEvent,
+    SpeechRecognizedEvent,
     SpeechSynthesizedEvent,
     StateChangedEvent,
     ThoughtsGeneratedEvent,
@@ -21,6 +22,7 @@ from character_os.events.types import (
 # Observe → Interpret → Reflect → Decide → Act → Remember
 _STAGE_LABELS: dict[type[Event], str] = {
     UserMessageEvent: "Observe",
+    SpeechRecognizedEvent: "Observe/Speech",
     InputInterpretedEvent: "Interpret",
     StateChangedEvent: "Reflect",
     IntentDecidedEvent: "Decide",
@@ -35,6 +37,10 @@ def _summarize(event: Event) -> str:
     if isinstance(event, UserMessageEvent):
         text = event.text.replace("\n", " ").strip()
         return f'text="{_clip(text, 60)}"'
+    if isinstance(event, SpeechRecognizedEvent):
+        text = event.text.replace("\n", " ").strip()
+        provider = f" provider={event.provider}" if event.provider else ""
+        return f'text="{_clip(text, 60)}"{provider}'
     if isinstance(event, InputInterpretedEvent) and event.interpretation:
         i = event.interpretation
         return f"intent={i.intent} tone={i.emotional_tone}"

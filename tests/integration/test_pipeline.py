@@ -31,6 +31,23 @@ def test_user_message_pipeline_emits_expected_events():
     assert "Aye" in result.text or len(result.text) > 10
 
 
+def test_speech_recognized_joins_same_pipeline():
+    from character_os.events.types import SpeechRecognizedEvent
+
+    session = CharacterSession(llm=StubProvider(), enable_scheduler=False, persist=False)
+    session.bus.start_recording()
+    result = session.send_speech("Ahoy there, captain!")
+    history = session.bus.stop_recording()
+    session.close()
+
+    types = [type(e) for e in history]
+    assert SpeechRecognizedEvent in types
+    assert UserMessageEvent in types
+    assert InputInterpretedEvent in types
+    assert ResponseReadyEvent in types
+    assert result.text
+
+
 def test_time_tick_does_not_speak():
     session = CharacterSession(llm=StubProvider(), enable_scheduler=False, persist=False)
     session.bus.start_recording()

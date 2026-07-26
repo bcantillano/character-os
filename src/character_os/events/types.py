@@ -95,7 +95,11 @@ class SensorReadingEvent(Event):
 
 @dataclass(frozen=True)
 class SpeechRecognizedEvent(Event):
+    """Phase 3: STT produced a transcript (Observe for speech)."""
+
     text: str = ""
+    audio_path: str = ""
+    provider: str = ""
 
 
 @dataclass(frozen=True)
